@@ -1,0 +1,5 @@
+curriculum/*.course.json
+curriculum/*-roadmap.md
+pnpm-lock.yaml
+out
+.next

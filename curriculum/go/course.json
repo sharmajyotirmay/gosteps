@@ -1,0 +1,26 @@
+{
+  "id": "go",
+  "version": 1,
+  "title": "Go: Build a Concurrent Job Processor",
+  "language": "go",
+  "project": "jobq",
+  "description": "Learn Go by building jobq, a concurrent, durable job-processing system with an HTTP API, from `go mod init` to a container running in CI.",
+  "stats": [
+    { "id": "FND", "name": "Fundamentals", "blurb": "Types, interfaces, errors, the toolchain" },
+    { "id": "CON", "name": "Concurrency", "blurb": "Goroutines, channels, sync, patterns" },
+    { "id": "REL", "name": "Reliability", "blurb": "Context, shutdown, retries, timeouts" },
+    { "id": "TST", "name": "Testing", "blurb": "Tests, race detector, fuzzing, benchmarks" },
+    { "id": "SYS", "name": "Systems", "blurb": "Persistence, HTTP, observability, performance" },
+    { "id": "DEP", "name": "Deployment", "blurb": "Builds, containers, CI, releases" }
+  ],
+  "learningRule": [
+    { "id": "understand", "name": "Understand" },
+    { "id": "smallest", "name": "Smallest implementation" },
+    { "id": "tests", "name": "Tests" },
+    { "id": "concurrency", "name": "Concurrency" },
+    { "id": "race", "name": "Race detector" },
+    { "id": "measure", "name": "Measure" },
+    { "id": "refactor", "name": "Refactor" },
+    { "id": "next", "name": "Next" }
+  ]
+}

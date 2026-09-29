@@ -1,0 +1,458 @@
+<title>GoSteps Status Window</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a "status window" console. Summary rail (player + stats) on the left, today's work on the right, ledger below. Dark-first. */
+:root {
+  --bg: #0a0f1e;
+  --bg-grid: rgba(90, 170, 255, 0.05);
+  --panel: rgba(16, 26, 52, 0.82);
+  --panel-edge: rgba(110, 180, 255, 0.28);
+  --glow: rgba(80, 160, 255, 0.35);
+  --fg: #e3ecff;
+  --muted: #8b9bc0;
+  --accent: #5fb3ff;
+  --accent-ink: #06121f;
+  --gold: #f2c35b;
+  --good: #4fd6a0;
+  --warn: #ffb454;
+  --danger: #ff6b7a;
+  --escrow: #9aa8c9;
+  --font-display: "Chakra Petch", "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef3fb; --bg-grid: rgba(30, 90, 180, 0.06);
+    --panel: rgba(255, 255, 255, 0.9); --panel-edge: rgba(40, 100, 190, 0.25); --glow: rgba(40, 110, 220, 0.12);
+    --fg: #0e1a33; --muted: #5a6a8c; --accent: #1f6fd1; --accent-ink: #ffffff;
+    --gold: #a86f00; --good: #0f8a5f; --warn: #b36200; --danger: #c62839; --escrow: #7482a3;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef3fb; --bg-grid: rgba(30, 90, 180, 0.06);
+  --panel: rgba(255, 255, 255, 0.9); --panel-edge: rgba(40, 100, 190, 0.25); --glow: rgba(40, 110, 220, 0.12);
+  --fg: #0e1a33; --muted: #5a6a8c; --accent: #1f6fd1; --accent-ink: #ffffff;
+  --gold: #a86f00; --good: #0f8a5f; --warn: #b36200; --danger: #c62839; --escrow: #7482a3;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 var(--font-body);
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 16px; }
+
+/* top bar */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.brand { font: 700 20px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.brand span { color: var(--accent); }
+.bar .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.chip {
+  font: 500 12px/1 var(--font-mono); letter-spacing: 0.04em; padding: 7px 10px; border-radius: 4px;
+  border: 1px solid var(--panel-edge); color: var(--muted); background: var(--panel); white-space: nowrap;
+}
+.chip b { color: var(--fg); font-weight: 600; }
+.chip.sample { border-style: dashed; }
+button.chip { cursor: pointer; }
+button.chip:hover { color: var(--fg); }
+
+/* panels: angled corners, a thin glowing edge */
+.panel {
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  box-shadow: 0 0 0 1px transparent, 0 0 24px -8px var(--glow), inset 0 0 40px -30px var(--glow);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  padding: 18px; min-width: 0;
+}
+.ptitle {
+  font: 600 12px/1 var(--font-display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+  display: flex; align-items: center; gap: 10px; margin: 0 0 14px;
+}
+.ptitle::after { content: ""; flex: 1; height: 1px; background: var(--panel-edge); }
+
+/* registry notice */
+.notice { display: flex; gap: 14px; align-items: flex-start; }
+.notice .tag {
+  font: 700 12px/1 var(--font-mono); color: var(--accent-ink); background: var(--accent);
+  padding: 6px 8px; letter-spacing: 0.08em; white-space: nowrap;
+}
+.notice p { margin: 0; }
+.notice .who { font: 600 12px/1.4 var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.notice.penalty .tag { background: var(--danger); color: #fff; }
+.notice.penalty { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.col { display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* player */
+.player { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; }
+.rank {
+  width: 76px; height: 86px; display: grid; place-items: center;
+  font: 700 44px/1 var(--font-display); color: var(--accent);
+  border: 2px solid var(--accent);
+  clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  text-shadow: 0 0 16px var(--glow);
+}
+.pname { font: 600 20px/1.2 var(--font-display); }
+.ptitle-sm { color: var(--gold); font: 500 13px/1.3 var(--font-body); }
+.lvl { font: 600 13px/1 var(--font-mono); color: var(--muted); margin-top: 6px; }
+.lvl b { color: var(--fg); font-size: 22px; }
+.xp { grid-column: 1 / -1; display: grid; gap: 6px; }
+.xpbar { height: 12px; background: color-mix(in srgb, var(--muted) 18%, transparent); position: relative; overflow: hidden; }
+.xpbar .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 60%, transparent), var(--accent)); transition: width .6s ease; box-shadow: 0 0 12px var(--glow); }
+.xpbar .esc { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--escrow) 0 4px, transparent 4px 8px); opacity: .8; transition: left .6s ease, width .6s ease; }
+.xprow { display: flex; justify-content: space-between; gap: 8px; font: 12px/1.3 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.xprow b { color: var(--fg); }
+
+/* stats */
+.stats { display: grid; gap: 10px; }
+.stat { display: grid; grid-template-columns: 44px 1fr auto; gap: 4px 10px; align-items: center; }
+.stat .k { font: 600 13px/1 var(--font-mono); color: var(--accent); }
+.stat .n { font: 600 18px/1 var(--font-display); font-variant-numeric: tabular-nums; text-align: right; min-width: 28px; }
+.stat .nm { font-size: 13px; }
+.sharp { grid-column: 2 / 4; display: flex; align-items: center; gap: 8px; font: 11px/1 var(--font-mono); color: var(--muted); }
+.sharp i { flex: 1; height: 4px; background: color-mix(in srgb, var(--muted) 20%, transparent); position: relative; }
+.sharp i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--v); background: var(--c, var(--good)); }
+.foot { font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+
+/* safeguards */
+.tokens { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tok { width: 18px; height: 18px; transform: rotate(45deg); border: 1.5px solid var(--gold); }
+.tok.on { background: var(--gold); box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--font-mono); text-align: right; }
+
+/* orders */
+.orders { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.order {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  padding: 12px 14px; border: 1px solid var(--panel-edge); background: color-mix(in srgb, var(--panel) 60%, transparent);
+  cursor: pointer; transition: border-color .2s, background .2s;
+}
+.order:hover { border-color: var(--accent); }
+.order:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.box { width: 20px; height: 20px; border: 1.5px solid var(--accent); display: grid; place-items: center; }
+.order.done .box { background: var(--accent); }
+.order.done .box::after { content: ""; width: 10px; height: 5px; border: 2px solid var(--accent-ink); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+.order.done .otitle { color: var(--muted); text-decoration: line-through; }
+.otitle { font-weight: 500; }
+.osub { font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
+.type { font: 600 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 6px; border: 1px solid currentColor; }
+.t-review { color: var(--good); } .t-read { color: var(--muted); } .t-implement { color: var(--accent); } .t-reflect { color: var(--gold); } .t-penalty { color: var(--danger); }
+.oxp { font: 600 14px/1 var(--font-mono); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bonus { margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.bonus b { color: var(--fg); font-family: var(--font-mono); }
+
+/* quest stepper */
+.qhead { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 14px; }
+.qhead h3 { margin: 0; font: 600 20px/1.2 var(--font-display); text-wrap: balance; }
+.qhead .ph { font: 12px/1 var(--font-mono); color: var(--muted); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.steps li { display: grid; gap: 6px; font-size: 11px; color: var(--muted); text-align: center; min-width: 0; }
+.steps li::before { content: ""; height: 6px; background: color-mix(in srgb, var(--muted) 22%, transparent); }
+.steps li.done::before { background: var(--accent); }
+.steps li.now::before { background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 10px); }
+.steps li.now { color: var(--fg); font-weight: 600; }
+@media (max-width: 560px) { .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 12px; } }
+
+/* boss */
+.criteria { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+.criteria li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+.criteria code { font: 13px var(--font-mono); background: color-mix(in srgb, var(--muted) 14%, transparent); padding: 1px 5px; }
+.dot { width: 12px; height: 12px; border: 1.5px solid var(--muted); margin-top: 5px; transform: rotate(45deg); }
+.criteria .ok .dot { background: var(--good); border-color: var(--good); }
+.locked { font: 600 11px/1 var(--font-mono); letter-spacing: .1em; color: var(--warn); border: 1px solid var(--warn); padding: 4px 6px; }
+
+/* ledger */
+.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ledger td, .ledger th { padding: 8px 10px; border-bottom: 1px solid var(--panel-edge); text-align: left; }
+.ledger th { font: 600 11px/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ledger .d { font-family: var(--font-mono); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.plus { color: var(--good); } .minus { color: var(--danger); } .hold { color: var(--escrow); }
+.scroll { overflow-x: auto; }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+/* toast + level-up */
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--panel); border: 1px solid var(--accent); color: var(--fg);
+  font: 600 13px/1.3 var(--font-mono); padding: 10px 16px; box-shadow: 0 0 24px var(--glow);
+  opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+.levelup { position: fixed; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 16px; }
+.levelup .panel { text-align: center; max-width: 360px; width: 100%; }
+.levelup h2 { font: 700 34px/1 var(--font-display); letter-spacing: .1em; color: var(--accent); margin: 8px 0; text-shadow: 0 0 20px var(--glow); }
+.btn { font: 600 13px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); border: 0; padding: 12px 18px; cursor: pointer; }
+.btn:focus-visible, button.chip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand">Go<span>Steps</span></div>
+    <div class="meta">
+      <span class="chip">Day <b>38</b> · resets 04:00</span>
+      <span class="chip">Mode <b>Standard</b></span>
+      <span class="chip">Methods <b>SRS · Recall · Pomodoro · Reflect</b></span>
+      <button class="chip" id="togglePenalty" type="button">Preview: missed day</button>
+      <span class="chip sample">Sample data</span>
+    </div>
+  </header>
+
+  <section class="panel notice" id="notice" aria-live="polite">
+    <span class="tag" id="noticeTag">NOTICE</span>
+    <div>
+      <div class="who">The Registry</div>
+      <p id="noticeText">Daily Orders issued. Clear all four for a 20% completion bonus. Your plan: <em>"After dinner at my desk, I open the worker-pool branch."</em></p>
+    </div>
+  </section>
+
+  <div class="grid">
+    <aside class="col">
+      <section class="panel">
+        <h2 class="ptitle">Status</h2>
+        <div class="player">
+          <div class="rank" aria-label="Rank C">C</div>
+          <div>
+            <div class="pname">Jyotirmay</div>
+            <div class="ptitle-sm">Title: Channel Wrangler</div>
+            <div class="lvl">LV <b id="lvl">15</b></div>
+          </div>
+          <div class="xp">
+            <div class="xpbar" role="progressbar" aria-label="XP to next level" aria-valuemin="0" id="xpbar">
+              <div class="fill" id="xpfill"></div>
+              <div class="esc" id="xpesc"></div>
+            </div>
+            <div class="xprow"><span><b id="xpin">375</b> / <span id="xpneed">425</span> XP</span><span id="escrowLbl" hidden>+<b id="escrowAmt">0</b> held</span><span>Next rank B: LV 22 + Phase 5 trial</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="ptitle">Stats</h2>
+        <div class="stats" id="stats"></div>
+        <p class="foot">The bar under each stat shows sharpness: how much of that stat's review cards you'd recall right now. It drops when you stop reviewing.</p>
+      </section>
+
+      <section class="panel">
+        <h2 class="ptitle">Safeguards</h2>
+        <dl class="kv">
+          <dt>Rest Tokens</dt><dd><span class="tokens"><span class="tok on"></span><span class="tok on"></span><span class="tok"></span></span></dd>
+          <dt>Grace days</dt><dd>1</dd>
+          <dt>Rank floor</dt><dd>2,925 XP</dd>
+          <dt>Stasis</dt><dd>Available</dd>
+        </dl>
+      </section>
+    </aside>
+
+    <main class="col">
+      <section class="panel">
+        <h2 class="ptitle">Daily Orders</h2>
+        <ul class="orders" id="orders"></ul>
+        <div class="bonus"><span>Cleared <b id="cleared">0</b> of <b id="total">4</b></span><span>Completion bonus <b id="bonus">+0 XP</b></span></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="ptitle">Current Quest</h2>
+        <div class="qhead">
+          <span class="ph">PHASE 3 · QUEST 12</span>
+          <h3>Bounded worker pool with graceful shutdown</h3>
+        </div>
+        <ol class="steps" aria-label="Learning Rule stages">
+          <li class="done">Understand</li>
+          <li class="done">Smallest impl</li>
+          <li class="done">Tests</li>
+          <li class="now" aria-current="step">Concurrency</li>
+          <li>Race</li>
+          <li>Measure</li>
+          <li>Refactor</li>
+          <li>Next</li>
+        </ol>
+      </section>
+
+      <div class="two">
+        <section class="panel">
+          <h2 class="ptitle">Gate Trial · Phase 3</h2>
+          <ul class="criteria">
+            <li class="ok"><span class="dot"></span><span><code>go test ./...</code> passes</span></li>
+            <li class="ok"><span class="dot"></span><span>Coverage ≥ 70% on <code>pool/</code></span></li>
+            <li><span class="dot"></span><span><code>-race</code> reports no data races</span></li>
+            <li><span class="dot"></span><span><code>goleak</code> finds no leaked goroutines after <code>Shutdown(ctx)</code></span></li>
+          </ul>
+          <p class="foot"><span class="locked">LOCKED</span> Opens after Quest 13. Paste <code>go test -json -race -cover</code> output to check criteria.</p>
+        </section>
+
+        <section class="panel">
+          <h2 class="ptitle">Ledger</h2>
+          <div class="scroll">
+            <table class="ledger">
+              <thead><tr><th>Reason</th><th class="d">XP</th></tr></thead>
+              <tbody id="ledger">
+                <tr><td>Implement: semaphore via buffered chan (evidence)</td><td class="d plus">+54</td></tr>
+                <tr><td>Review · 14 cards</td><td class="d plus">+42</td></tr>
+                <tr><td>Achievement: First clean <code>-race</code></td><td class="d plus">+25</td></tr>
+                <tr><td>Reflection · Day 37</td><td class="d plus">+23</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="levelup" id="levelup" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="luTitle">
+    <div class="ptitle" style="justify-content:center">The Registry</div>
+    <h2 id="luTitle">LEVEL UP</h2>
+    <p>You reached <b>LV <span id="luLvl">16</span></b>. Concurrency sharpened.</p>
+    <button class="btn" id="luClose" type="button">Continue</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const stats = [
+    { k: "FND", nm: "Fundamentals", n: 24, s: 91 },
+    { k: "CON", nm: "Concurrency", n: 17, s: 78 },
+    { k: "REL", nm: "Reliability", n: 11, s: 84 },
+    { k: "TST", nm: "Testing", n: 14, s: 69 },
+    { k: "SYS", nm: "Systems", n: 6, s: 88 },
+    { k: "DEP", nm: "Deployment", n: 2, s: 100 },
+  ];
+  const baseOrders = [
+    { t: "review", title: "Review 12 due cards", sub: ["channels", "select", "context"], xp: 36 },
+    { t: "read", title: "Understand: context cancellation propagation", sub: ["pre-question first", "~15 min"], xp: 13 },
+    { t: "implement", title: "Add Shutdown(ctx) that drains in-flight jobs", sub: ["Pomodoro 0/2", "CON · REL"], xp: 54 },
+    { t: "reflect", title: "Reflect: what surprised you today?", sub: ["3 prompts", "releases held XP"], xp: 20 },
+  ];
+  const penaltyOrder = { t: "penalty", title: "Penalty Quest: 18 overdue cards + 1 retry", sub: ["~25 min", "clears held XP"], xp: 0 };
+
+  let level = 15, xpIn = 375, escrow = 0, penalty = false;
+  let orders = baseOrders.map(o => ({ ...o, done: false }));
+  const need = L => 50 + 25 * L;
+  const $ = id => document.getElementById(id);
+
+  function renderStats() {
+    $("stats").innerHTML = stats.map(s => {
+      const c = s.s < 75 ? "var(--warn)" : "var(--good)";
+      return `<div class="stat"><span class="k">${s.k}</span><span class="nm">${s.nm}</span><span class="n">${s.n}</span>
+        <span class="sharp"><i style="--v:${s.s}%;--c:${c}"></i>${s.s}%</span></div>`;
+    }).join("");
+  }
+
+  function renderXP() {
+    const n = need(level);
+    $("lvl").textContent = level;
+    $("xpin").textContent = xpIn; $("xpneed").textContent = n;
+    $("xpfill").style.width = Math.min(100, xpIn / n * 100) + "%";
+    $("xpesc").style.left = Math.min(100, xpIn / n * 100) + "%";
+    $("xpesc").style.width = Math.min(100 - xpIn / n * 100, escrow / n * 100) + "%";
+    $("xpbar").setAttribute("aria-valuemax", n); $("xpbar").setAttribute("aria-valuenow", xpIn);
+    $("escrowLbl").hidden = escrow === 0; $("escrowAmt").textContent = escrow;
+  }
+
+  function renderOrders() {
+    $("orders").innerHTML = orders.map((o, i) => `
+      <li class="order ${o.done ? "done" : ""}" tabindex="0" role="checkbox" aria-checked="${o.done}" data-i="${i}">
+        <span class="box" aria-hidden="true"></span>
+        <div><div class="otitle">${o.title}</div>
+          <div class="osub"><span class="type t-${o.t}">${o.t}</span>${o.sub.map(s => `<span>${s}</span>`).join("")}</div></div>
+        <span class="oxp">${o.xp ? "+" + o.xp : "—"}</span>
+      </li>`).join("");
+    const regular = orders.filter(o => o.t !== "penalty");
+    const cleared = regular.filter(o => o.done).length;
+    $("cleared").textContent = cleared; $("total").textContent = regular.length;
+    const b = cleared === regular.length ? Math.round(regular.reduce((a, o) => a + o.xp, 0) * 0.2) : 0;
+    $("bonus").textContent = "+" + b + " XP";
+  }
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function addLedger(reason, delta, cls) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td></td><td class="d ${cls}">${delta}</td>`;
+    tr.firstChild.textContent = reason;
+    $("ledger").prepend(tr);
+  }
+
+  function gain(amount, reason) {
+    if (penalty) {
+      escrow += amount; renderXP(); addLedger(reason + " (held)", "+" + amount, "hold");
+      toast(`+${amount} XP held until the Penalty Quest is cleared`); return;
+    }
+    xpIn += amount; addLedger(reason, "+" + amount, "plus"); toast(`+${amount} XP`);
+    let leveled = false;
+    while (xpIn >= need(level)) { xpIn -= need(level); level++; leveled = true; }
+    renderXP();
+    if (leveled) { $("luLvl").textContent = level; $("levelup").hidden = false; $("luClose").focus(); }
+  }
+
+  function toggle(i) {
+    const o = orders[i];
+    if (o.done) return;
+    o.done = true;
+    if (o.t === "penalty") {
+      penalty = false;
+      const released = escrow; escrow = 0;
+      addLedger("Penalty Quest cleared, streak repaired", "0", "plus");
+      setNotice(false);
+      if (released) { xpIn += released; addLedger("Held XP released", "+" + released, "plus"); }
+      while (xpIn >= need(level)) { xpIn -= need(level); level++; }
+      renderXP(); toast(released ? `Penalty cleared. +${released} XP released` : "Penalty cleared. Streak repaired");
+    } else {
+      gain(o.xp, o.title);
+      const regular = orders.filter(x => x.t !== "penalty");
+      if (regular.every(x => x.done)) gain(Math.round(regular.reduce((a, x) => a + x.xp, 0) * 0.2), "Daily Orders completion bonus");
+    }
+    renderOrders();
+  }
+
+  function setNotice(p) {
+    $("notice").classList.toggle("penalty", p);
+    $("noticeTag").textContent = p ? "PENALTY" : "NOTICE";
+    $("noticeText").innerHTML = p
+      ? "You missed 2 days (1 grace day used). A Penalty Quest has been issued. XP you earn now is held, not lost, and is released when you clear it. Clear it within 48 h to repair your streak."
+      : "Daily Orders issued. Clear all four for a 20% completion bonus. Your plan: <em>\"After dinner at my desk, I open the worker-pool branch.\"</em>";
+    $("togglePenalty").textContent = p ? "Preview: on track" : "Preview: missed day";
+  }
+
+  $("togglePenalty").addEventListener("click", () => {
+    penalty = !penalty;
+    if (penalty) {
+      orders = [{ ...penaltyOrder, done: false }, ...baseOrders.map(o => ({ ...o, done: false }))];
+      xpIn = Math.max(0, xpIn - 38); addLedger("Decay · 2 days past grace (Standard)", "−38", "minus");
+    } else {
+      orders = baseOrders.map(o => ({ ...o, done: false })); escrow = 0;
+    }
+    setNotice(penalty); renderXP(); renderOrders();
+  });
+
+  $("orders").addEventListener("click", e => { const li = e.target.closest(".order"); if (li) toggle(+li.dataset.i); });
+  $("orders").addEventListener("keydown", e => {
+    if ((e.key === " " || e.key === "Enter") && e.target.matches(".order")) { e.preventDefault(); toggle(+e.target.dataset.i); }
+  });
+  $("luClose").addEventListener("click", () => { $("levelup").hidden = true; });
+
+  renderStats(); renderXP(); renderOrders();
+})();
+</script>
