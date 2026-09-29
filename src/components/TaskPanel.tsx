@@ -9,7 +9,7 @@ import { pomodoroMult, taskXP, type Verify } from "@/engine/rules";
 import { idx } from "@/lib/course";
 import { useGame } from "./GameProvider";
 import { PomodoroTimer } from "./PomodoroTimer";
-import { Markdown } from "./ui";
+import { InlineCode, Markdown } from "./ui";
 
 const REFLECT_PROMPTS = ["What did I build?", "What surprised me, or what did I get wrong at first?", "What will I do differently next time?"];
 
@@ -96,7 +96,7 @@ export function TaskPanel({ task, quest }: { task: Task; quest?: Quest }) {
       {recallGate && (
         <div className="gate">
           <h4>Active recall</h4>
-          <p style={{ margin: 0 }}>{recallPrompt}</p>
+          <p style={{ margin: 0 }}><InlineCode text={recallPrompt} /></p>
           <textarea id={`recall-${task.id}`} aria-label="Your answer" value={recallAnswer} onChange={(e) => setRecallAnswer(e.target.value)} placeholder="Answer from memory before you look…" disabled={revealed} />
           {!revealed ? (
             <div><button type="button" className="btn sm" disabled={words(recallAnswer) < 2} onClick={() => setRevealed(true)}>Reveal the notes</button></div>

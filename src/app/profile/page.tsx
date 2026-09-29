@@ -36,9 +36,9 @@ export default function ProfilePage() {
                 const cur = r.id === state.player.rank;
                 const reached = rankIndex(state.player.rank) >= rankIndex(r.id);
                 return (
-                  <div key={r.id} className="row" style={{ opacity: reached || cur ? 1 : 0.6 }}>
+                  <div key={r.id} className="row" style={{ opacity: reached || cur ? 1 : 0.6, flexWrap: "nowrap" }}>
                     <span className="rank sm" style={cur ? undefined : { borderColor: "var(--panel-edge)", color: reached ? "var(--accent)" : "var(--muted)" }}>{r.id}</span>
-                    <span className="small">
+                    <span className="small" style={{ minWidth: 0 }}>
                       <b>{r.name}</b><br />
                       <span className="muted">LV {r.minLevel}{r.bossPhase ? ` + Phase ${r.bossPhase} Gate` : ""}{r.id === "Ω" ? " + 90% of cards stable ≥ 30 days" : ""}</span>
                     </span>

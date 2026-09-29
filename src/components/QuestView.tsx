@@ -7,7 +7,7 @@ import { isDone } from "@/engine/game";
 import { idx } from "@/lib/course";
 import { useGame } from "./GameProvider";
 import { TaskPanel } from "./TaskPanel";
-import { Markdown, Panel } from "./ui";
+import { InlineCode, Markdown, Panel } from "./ui";
 
 const TYPE_LABEL: Record<string, string> = { read: "read", implement: "build", test: "test", reflect: "reflect", boss: "boss" };
 
@@ -112,7 +112,7 @@ export function QuestView({ id }: { id: string }) {
           <Panel title="Self-check">
             {quest.quiz.map((q) => (
               <details key={q.id} className="small">
-                <summary style={{ cursor: "pointer" }}>{q.q}</summary>
+                <summary style={{ cursor: "pointer" }}><InlineCode text={q.q} /></summary>
                 <div style={{ marginTop: 6 }}><Markdown>{q.a}</Markdown></div>
               </details>
             ))}

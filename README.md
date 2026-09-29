@@ -9,6 +9,41 @@ A leveling-style daily quest system for learning Go. You build **jobq**, a concu
 
 All names, ranks, and visuals are original. The app isn't affiliated with any manhwa, webtoon, or game.
 
+![The System window opening over the Status dashboard with a LEVEL UP notice](docs/screenshots/system-window.png)
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/dashboard.png" alt="Status dashboard with level, rank, stats with sharpness bars, Daily Orders, and the current quest's Learning Rule stages"></td>
+    <td width="50%"><img src="docs/screenshots/quest.png" alt="Quest page with an active-recall prompt before the notes, key terms, self-check, and sources"></td>
+  </tr>
+  <tr>
+    <td><b>Status.</b> Level, rank, stats with Sharpness (how much you'd recall right now), today's Daily Orders, and where you are in the quest's Learning Rule.</td>
+    <td><b>Quest.</b> Every quest runs Understand → Build → Tests → Concurrency → Race → Measure → Refactor → Next. With active recall on, you answer before the notes appear.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/gate-trial.png" alt="Gate Trial page with pasted go test output and criteria checked: race-clean and coverage 78.8% of 70% required"></td>
+    <td><img src="docs/screenshots/review.png" alt="Spaced-repetition review card with Again, Hard, Good, Easy buttons showing the next interval for each"></td>
+  </tr>
+  <tr>
+    <td><b>Gate Trial.</b> Paste <code>go test -race -cover</code> output. The app checks for a pass, data races, leaks, and coverage.</td>
+    <td><b>Review.</b> FSRS scheduling. Each button shows when you'll see the card again. Keys: Space, then 1–4.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/profile.png" alt="Profile with stats table, rank ladder from E to Ascendant, and achievements, some hidden"></td>
+    <td><img src="docs/screenshots/system-commands.png" alt="System window Commands tab with quick actions and copyable go commands for the current stage"></td>
+  </tr>
+  <tr>
+    <td><b>Profile.</b> Rank ladder (each rank needs a level and a cleared Gate Trial), stats, and achievements that stay hidden until you unlock them.</td>
+    <td><b>System → Commands.</b> Quick actions, plus the exact <code>go</code> commands for the stage you're on, ready to copy.</td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/phone-system.png" width="300" alt="The System window's Status tab on a phone"></p>
+
+The screenshots use demo data: two weeks of study played through the real engine (`e2e/seed.ts`). Regenerate them with `pnpm build && pnpm screenshots`.
+
 ## Run it
 
 Requires Node 20+ and pnpm 10 (`corepack enable`).
@@ -37,6 +72,7 @@ pnpm preview             # serves out/ on http://localhost:3000
 | `pnpm lint` | ESLint |
 | `pnpm check` | Course build, typecheck, lint, and unit tests together |
 | `pnpm format` | Prettier |
+| `pnpm screenshots` | Regenerate `docs/screenshots/` from demo data (run `pnpm build` first) |
 
 ## Working on the Go project alongside
 
@@ -95,7 +131,7 @@ The build is a static site. To host it on GitHub Pages under `/<repo>`, build wi
 | M3: methods (SRS, recall, Pomodoro, Feynman, reflection, interleaving, project-first) | ✅ |
 | M4: evidence parser, Gate Trials, achievements and titles | ✅ (GitHub links are recorded but not fetched yet) |
 | M5: remote adapters | Export/import ✅. Supabase, PocketBase, and Postgres: planned |
-| M6: polish, accessibility audit, screenshots | In progress |
+| M6: polish, accessibility audit, screenshots | Screenshots ✅. Accessibility audit in progress |
 
 ## License
 

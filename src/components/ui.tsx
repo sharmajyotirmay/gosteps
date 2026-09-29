@@ -20,6 +20,17 @@ export function Markdown({ children }: { children: string }) {
   );
 }
 
+/** Inline text with `code` spans, for single-line prompts where block markdown would add paragraphs. */
+export function InlineCode({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(`[^`]+`)/).map((part, i) =>
+        part.startsWith("`") && part.endsWith("`") ? <code key={i}>{part.slice(1, -1)}</code> : part,
+      )}
+    </>
+  );
+}
+
 export function Panel({ title, children, className = "" }: { title?: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={`panel ${className}`}>

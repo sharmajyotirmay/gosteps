@@ -15,7 +15,8 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "check": "pnpm course:build && pnpm typecheck && pnpm lint && pnpm test",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",
