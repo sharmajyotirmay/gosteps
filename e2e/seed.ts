@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { Rating } from "ts-fsrs";
 import { buildCourse } from "../scripts/build-course";
 import { indexCourse } from "../src/engine/course";
+import { buildDsa } from "../scripts/build-dsa";
+import { indexDsa } from "../src/engine/dsa-track";
+import { logProblem, startDsa, studyPattern, topicForDay } from "../src/engine/dsa";
 import { completeTask, markNoticesRead, today, onboard, reviewCard, rollover, writeReflection, type Ctx } from "../src/engine/game";
 import { initialState, type GameState } from "../src/engine/state";
 import { makeBundle } from "../src/storage/adapter";
@@ -10,13 +13,17 @@ import { makeBundle } from "../src/storage/adapter";
 // Plays ~two weeks of study through the real engine, ending at `end`, for README screenshots.
 export function demoBundle(end = new Date()) {
   const idx = indexCourse(buildCourse(join(import.meta.dirname, "../curriculum/go")));
+  const dsa = indexDsa(buildDsa(join(import.meta.dirname, "../curriculum/dsa")));
+  // Verified anchor problems in plan order: the demo learner works through them day by day.
+  const anchors = dsa.topics.flatMap((t) => t.problems.map((p) => ({ ...p, topicId: t.id })));
+  let nextAnchor = 0;
   let n = 0;
   const DAYS = 14;
   // Each study session starts 3 h before `end`'s clock time, so the last one is already in the past.
   const start = new Date(end.getTime() - DAYS * 86_400_000 - 3 * 3600_000);
   const at = (day: number, hoursLater: number) => new Date(start.getTime() + day * 86_400_000 + hoursLater * 3600_000);
   const step = (s: GameState, now: Date, fn: (d: GameState, c: Ctx) => void) =>
-    produce(s, (d) => fn(d, { idx, now, newId: () => `demo-${++n}` }));
+    produce(s, (d) => fn(d, { idx, dsa, now, newId: () => `demo-${++n}` }));
 
   let s = initialState("go", start);
   s = step(s, start, (d, c) => {
@@ -28,6 +35,7 @@ export function demoBundle(end = new Date()) {
       dayBoundaryHour: 4,
     });
     d.settings.theme = "dark";
+    startDsa(d, c);
   });
 
   for (let day = 0; day <= DAYS; day++) {
@@ -40,6 +48,17 @@ export function demoBundle(end = new Date()) {
     const due = last || !order ? [] : Object.values(s.cards).sort((a, b) => a.fsrs.due.localeCompare(b.fsrs.due)).slice(0, order.target);
     for (const [i, c] of due.entries()) {
       s = step(s, new Date(t.getTime() + i * 30_000), (d, ctx) => reviewCard(d, ctx, c.id, i % 7 === 3 ? Rating.Hard : Rating.Good));
+    }
+    // DSA: study the day's pattern, then log problems (about 9 a day, slightly behind pace; a few with hints).
+    const topic = topicForDay(dsa, day + 1, 100);
+    s = step(s, new Date(t.getTime() + 30_000), (d, c) => studyPattern(d, c, topic.id));
+    const quota = last ? 4 : 8 + (day % 3);
+    for (let k = 0; k < quota && nextAnchor < anchors.length; k++) {
+      const a = anchors[nextAnchor++];
+      const outcome = k % 6 === 5 ? "hint" : "solved";
+      s = step(s, new Date(t.getTime() + 60_000 + k * 90_000), (d, c) => {
+        logProblem(d, c, { problem: a.slug, difficulty: a.difficulty, outcome, inGo: k % 4 !== 3, minutes: 10 + ((k * 7) % 25), topicId: a.topicId });
+      });
     }
     // Then work through the course in order. The last day stops at the start of a quest,
     // so the screenshots show the active-recall gate on its first read task.

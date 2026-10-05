@@ -1,0 +1,10 @@
+{
+  "id": "dsa",
+  "version": 1,
+  "title": "DSA: 1000 Problems in 100 Days",
+  "goal": 1000,
+  "days": 100,
+  "language": "go",
+  "description": "Ten phases of patterns, from hashing to dynamic programming, solved in Go. Each day has a topic, a target of about 10 problems, curated anchor problems, and tag lists to fill the rest.",
+  "stats": [{ "id": "ALG", "name": "Algorithms", "blurb": "Data structures, patterns, problem solving" }]
+}

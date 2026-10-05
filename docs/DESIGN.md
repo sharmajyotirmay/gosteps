@@ -341,6 +341,26 @@ interface StorageAdapter {
 
 ---
 
+## 8b. DSA track (added after M4)
+
+A second track runs alongside the Go course and feeds **the same player**: XP, level, rank (via level), stats, streak, Daily Orders, review deck, notices, and achievements.
+
+| Piece | Rule |
+|---|---|
+| Plan | `curriculum/dsa/`: 10 phases → 35 topics → 100 plan days. Day N's topic comes from `dayPlan[N]`, stretched proportionally if the learner picks a different number of days. |
+| Goal | Unique problems with outcome solved or hint count toward the goal (default 1000). Re-logging a problem never adds. |
+| Daily target | `clamp(ceil(remaining at day start ÷ days left), 5, 20)`. This is spacing over cramming: falling behind raises the target gently, and the cap of 20 keeps a bad week from creating an impossible day. |
+| Daily Orders | A `dsa` order ("DSA day N/100: T problems · topic"). It's a work order, so meeting it counts toward the day like a Go task. |
+| XP | easy 8 / medium 15 / hard 30 × (1 + 0.05·(phase−1)) × 1.2 if solved in Go. Hint × 0.5. Failed = 2 (honesty isn't punished). Stats: ALG +1.0, FND +0.2 when solved in Go. |
+| Redo queue | Hint → re-solve in 3 days. Failed → 1 day. This is retrieval practice on the problems that didn't stick (see §2, active recall). A new attempt closes the pending redo. |
+| Patterns | "I studied this pattern" gives +10 XP and adds the topic's cards to the shared FSRS deck (statId ALG, eligible for interleaved drills). |
+| Gate Trials | Timed set per phase: pass with ≥ 75% of the problems within the limit. Honor-based, and the clock is started in-app. |
+| Storage | New `problems` collection (Dexie schema v2). Older saves and backups are upgraded by `normalizeState`. |
+
+**Level budget.** 1000 problems × ~14 XP × ~1.1 ≈ 15k XP on top of the Go course's ~21k. Expect level ~50 by the end of both. Ranks still require the Go Gate Trials, so DSA speeds up the level half of each rank requirement but can't replace the boss half.
+
+**Anchor problems** were checked against LeetCode's public API on 2026-10-04: all 266 exist, all are free, and the difficulty labels match.
+
 ## 9. Decisions made
 
 1. **Roadmap.** No roadmap file was provided, so the curriculum was authored from research: 9 phases and 35 quests, in `curriculum/go/*.md`. It's checked against Go 1.25 and 1.26 (`wg.Go`, `testing/synctest`, `b.Loop`, `errors.AsType`, the goroutine-leak profile, Green Tea GC). The format is documented in `curriculum/README.md`.

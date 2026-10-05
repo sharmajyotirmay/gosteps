@@ -5,6 +5,7 @@ A leveling-style daily quest system for learning Go. You build **jobq**, a concu
 - **Local-first.** No account, no server, no telemetry. Data lives in your browser's IndexedDB. Export a backup whenever you like.
 - **Evidence-based.** Spaced repetition (FSRS), active recall, Pomodoro, interleaving, Feynman explanations, and reflection. Each method changes the actual flow. See [docs/DESIGN.md](docs/DESIGN.md) for the research and formulas.
 - **Humane penalties.** Grace days, Rest Tokens, Stasis (vacation mode), XP held in escrow rather than deleted, and Gentle, Standard, or Hardcore severity.
+- **DSA track: 1000 problems in 100 days.** Ten phases of patterns (35 topics, 266 verified anchor problems), solved in Go, on the same level, rank, stats, streak, and Daily Orders as the Go quests.
 - **Curriculum as data.** Courses are markdown folders compiled to JSON. See [curriculum/README.md](curriculum/README.md).
 
 All names, ranks, and visuals are original. The app isn't affiliated with any manhwa, webtoon, or game.
@@ -38,6 +39,12 @@ All names, ranks, and visuals are original. The app isn't affiliated with any ma
     <td><b>Profile.</b> Rank ladder (each rank needs a level and a cleared Gate Trial), stats, and achievements that stay hidden until you unlock them.</td>
     <td><b>System → Commands.</b> Quick actions, plus the exact <code>go</code> commands for the stage you're on, ready to copy.</td>
   </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/dsa.png" alt="DSA page: 129 of 1000 solved on day 15, 21 behind pace, a 100-day heatmap, today's topic Monotonic stack, and the log form"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>DSA.</b> Progress toward 1000, pace (ahead or behind), and a 100-square map, one square per day. Below that: today's topic with pattern notes and verified anchor problems, a quick log form, the redo queue, and the whole 100-day plan with timed Gate Trials.</td>
+  </tr>
 </table>
 
 <p align="center"><img src="docs/screenshots/phone-system.png" width="300" alt="The System window's Status tab on a phone"></p>
@@ -65,7 +72,7 @@ pnpm preview             # serves out/ on http://localhost:3000
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Dev server with hot reload |
-| `pnpm course:build` | Compile `curriculum/go/*.md` to `curriculum/go.course.json` and `go-roadmap.md` |
+| `pnpm course:build` | Compile `curriculum/go/*.md` and `curriculum/dsa/*.md` to JSON and readable roadmaps |
 | `pnpm test` | Unit tests (engine rules, evidence parser, storage, course validation) |
 | `pnpm e2e` | Playwright end-to-end tests against the static build (run `pnpm build` first) |
 | `pnpm typecheck` | `tsc --noEmit` |
@@ -88,6 +95,31 @@ go test -race -cover ./...        # paste this output into test and race stages 
 ```
 
 The System window's **Commands** tab shows the right `go` commands for the stage you're on.
+
+## The DSA track
+
+**Goal:** 1000 problems in 100 days, about 10 a day. You can change the goal and length in Settings.
+
+**How it's organized:**
+- **Same structure as the Go course.** 10 phases → 35 topics, each lasting a few days → daily problems. A timed Gate Trial closes each phase. The full plan is in [curriculum/dsa-roadmap.md](curriculum/dsa-roadmap.md).
+- **Each topic** has pattern notes with Go code, 3 review cards, and 5–11 curated anchor problems. All 266 anchors were checked against LeetCode: they exist, they're free, and the difficulty labels match. Tag links fill the rest of each day's target.
+- **Hints and failures come back.** "Needed a hint" returns in 3 days and "couldn't solve" in 1 day, in your **redo queue**. Re-solving without help is retrieval practice.
+
+**How it links to your Go progress:**
+- **Daily Orders** gain a "DSA day N/100" order. Meeting it counts toward the day, just like a Go task.
+- **XP:** easy 8, medium 15, hard 30. Solving in Go gives +20% XP and +Fundamentals, a hint gives half, and an honest failed attempt gives 2. Everything raises the new **ALG** stat and the same level.
+- **Review cards:** pattern cards go into the same FSRS deck and show up in interleaved drills.
+- **Daily target:** it adjusts to what's left (5 to 20 a day), so falling behind raises it gently instead of piling on.
+- **Counting:** only unique problems count toward 1000. Logging the same problem twice doesn't add.
+
+Solve in a separate Go module, one package per problem. The DSA page's **Solve it in Go** panel copies these commands for you:
+
+```sh
+mkdir -p ~/Dev/dsa-go && cd ~/Dev/dsa-go && go mod init dsa
+mkdir -p t01-hashing/two_sum && cd t01-hashing/two_sum
+# write solution.go + a table-driven solution_test.go
+go test ./...
+```
 
 ## Using the System
 
@@ -131,6 +163,7 @@ The build is a static site. To host it on GitHub Pages under `/<repo>`, build wi
 | M3: methods (SRS, recall, Pomodoro, Feynman, reflection, interleaving, project-first) | ✅ |
 | M4: evidence parser, Gate Trials, achievements and titles | ✅ (GitHub links are recorded but not fetched yet) |
 | M5: remote adapters | Export/import ✅. Supabase, PocketBase, and Postgres: planned |
+| DSA track: 1000 problems / 100 days, linked to the same player | ✅ |
 | M6: polish, accessibility audit, screenshots | Screenshots ✅. Accessibility audit in progress |
 
 ## License

@@ -1,4 +1,4 @@
-import { COLLECTIONS, type CollectionName, type GameState, type Player, type Settings } from "@/engine/state";
+import { COLLECTIONS, normalizeState, type CollectionName, type GameState, type Player, type Settings } from "@/engine/state";
 
 // The storage boundary. Like the Go roadmap's JobRepository, the app talks only to this
 // interface; LocalAdapter (IndexedDB) is the default and remote adapters can slot in later.
@@ -56,5 +56,5 @@ export function readBundle(raw: unknown): GameState {
   const s = b.state as GameState;
   if (!s.player || !s.settings) throw new Error("The backup is missing player or settings data.");
   for (const c of COLLECTIONS) if (typeof s[c] !== "object" || s[c] === null) s[c] = {} as never;
-  return s;
+  return normalizeState(s);
 }

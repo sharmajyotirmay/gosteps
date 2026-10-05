@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "course:build": "tsx scripts/build-course.ts",
+    "course:build": "tsx scripts/build-course.ts && tsx scripts/build-dsa.ts",
     "predev": "pnpm course:build",
     "dev": "next dev",
     "prebuild": "pnpm course:build",

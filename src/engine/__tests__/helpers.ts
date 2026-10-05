@@ -1,16 +1,21 @@
 import { produce } from "immer";
 import { buildCourse } from "../../../scripts/build-course";
 import { indexCourse } from "../course";
+import { buildDsa } from "../../../scripts/build-dsa";
+import { indexDsa } from "../dsa-track";
 import type { Ctx } from "../game";
 import { onboard } from "../game";
 import { initialState, type GameState } from "../state";
 import { join } from "node:path";
 
 export const idx = indexCourse(buildCourse(join(__dirname, "../../../curriculum/go")));
+export const dsa = indexDsa(buildDsa(join(__dirname, "../../../curriculum/dsa")));
+
+// Module-level so ids stay unique across separate actions in one test.
+let n = 0;
 
 export function makeCtx(now: Date): Ctx {
-  let n = 0;
-  return { idx, now, newId: () => `id${++n}` };
+  return { idx, dsa, now, newId: () => `id${++n}` };
 }
 
 export function at(iso: string) {

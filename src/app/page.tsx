@@ -7,7 +7,8 @@ import { Panel, PlayerCard, StatList, Tokens } from "@/components/ui";
 import { isMet, nextTask, openPenalty, today } from "@/engine/game";
 import { STAGES } from "@/engine/course";
 import { SEVERITIES, rankDef, RANKS, rankIndex } from "@/engine/rules";
-import { idx } from "@/lib/course";
+import { dsa, idx } from "@/lib/course";
+import { pace, topicForDay } from "@/engine/dsa";
 
 export default function Dashboard() {
   const { state, now } = useGame();
@@ -94,6 +95,8 @@ export default function Dashboard() {
             )}
           </Panel>
 
+          <DsaPanel />
+
           {next && (
             <Panel title={next.type === "boss" ? "Gate Trial" : "Current Quest"}>
               {quest ? (
@@ -122,5 +125,40 @@ export default function Dashboard() {
         </div>
       </div>
     </>
+  );
+}
+
+function DsaPanel() {
+  const { state, now } = useGame();
+  if (!state.settings.dsa.enabled) return null;
+  const p = pace(state, { idx, dsa, now, newId: () => "" });
+  if (!p) {
+    return (
+      <Panel title="DSA track">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <span className="small">1000 problems in 100 days, solved in Go, on the same level and streak.</span>
+          <Link className="btn sm" href="/dsa">Start the challenge</Link>
+        </div>
+      </Panel>
+    );
+  }
+  const topic = topicForDay(dsa, Math.min(Math.max(p.day, 1), p.daysTotal), p.daysTotal);
+  return (
+    <Panel title={`DSA · day ${Math.min(p.day, p.daysTotal)} of ${p.daysTotal}`}>
+      <div className="stack">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+          <span className="big-num" style={{ fontSize: 32 }}>{p.solved}<small> / {p.goal}</small></span>
+          <span className="row">
+            <span className="chip"><b>{p.todaySolved}</b> / {p.target} today</span>
+            <span className={`chip ${p.delta >= 0 ? "good" : p.delta > -p.target ? "warn" : "bad"}`}>{p.delta >= 0 ? `${p.delta} ahead` : `${-p.delta} behind`}</span>
+          </span>
+        </div>
+        <div className="progress" aria-label={`${p.solved} of ${p.goal} problems`}><i style={{ width: `${Math.min(100, (p.solved / p.goal) * 100)}%`, background: "var(--violet)" }} /></div>
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <span className="small muted">Topic: <b style={{ color: "var(--fg)" }}>{topic.title}</b></span>
+          <Link className="btn sm ghost" href="/dsa">Log problems</Link>
+        </div>
+      </div>
+    </Panel>
   );
 }

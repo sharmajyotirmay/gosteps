@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { markNoticesRead, nextTask, openPenalty, today, spendRestToken } from "@/engine/game";
 import { SEVERITIES } from "@/engine/rules";
 import type { Notice } from "@/engine/state";
-import { idx } from "@/lib/course";
+import { dsa, idx } from "@/lib/course";
+import { pace } from "@/engine/dsa";
 import { useGame, type SystemTab } from "../GameProvider";
 import { PlayerCard, StatList, Tokens } from "../ui";
 import { OrderList } from "../OrderList";
@@ -83,6 +84,7 @@ export function SystemWindow() {
   const penalty = openPenalty(state);
   const next = nextTask(state, idx);
   const sev = SEVERITIES[state.settings.severity];
+  const dsaPace = pace(state, { idx, dsa, now, newId: () => "" });
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -166,6 +168,12 @@ export function SystemWindow() {
                 <dt>Mode</dt><dd>{sev.name}</dd>
                 <dt>Missed in a row</dt><dd>{state.player.missedStreak}</dd>
                 {state.player.rankLock && <><dt>Rank lock</dt><dd>{state.player.rankLock} (Trial pending)</dd></>}
+                {dsaPace && (
+                  <>
+                    <dt>DSA</dt><dd>{dsaPace.solved}/{dsaPace.goal} · day {Math.min(dsaPace.day, dsaPace.daysTotal)}/{dsaPace.daysTotal}</dd>
+                    <dt>DSA today</dt><dd>{dsaPace.todaySolved}/{dsaPace.target} · {dsaPace.delta >= 0 ? `${dsaPace.delta} ahead` : `${-dsaPace.delta} behind`}</dd>
+                  </>
+                )}
               </dl>
             </>
           )}
@@ -187,6 +195,10 @@ export function SystemWindow() {
                   </div>
                 )}
                 <div className="sys-cmd"><span>Review due cards</span><Link className="btn sm ghost" href="/review" onClick={close}>Review</Link></div>
+                <div className="sys-cmd">
+                  <span>{dsaPace ? `Log a DSA problem (${dsaPace.todaySolved}/${dsaPace.target} today)` : "Start the 1000-problem DSA challenge"}</span>
+                  <Link className="btn sm ghost" href="/dsa" onClick={close}>DSA</Link>
+                </div>
                 <div className="sys-cmd"><span>Write today&apos;s reflection</span><Link className="btn sm ghost" href="/journal" onClick={close}>Journal</Link></div>
                 <div className="sys-cmd">
                   <span>Spend a Rest Token on today ({state.player.restTokens} left)</span>

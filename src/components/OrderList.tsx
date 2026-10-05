@@ -7,12 +7,13 @@ import { idx } from "@/lib/course";
 function href(i: OrderItem) {
   if (i.kind === "review") return "/review";
   if (i.kind === "reflect") return "/journal";
+  if (i.kind === "dsa") return "/dsa";
   const t = i.taskId ? idx.taskById.get(i.taskId) : undefined;
   if (!t) return "/quests";
   return `/quests/${t.type === "boss" ? t.id : t.questId}#${t.id}`;
 }
 
-const LABEL: Record<OrderItem["kind"], string> = { review: "review", concept: "read", build: "build", reflect: "reflect" };
+const LABEL: Record<OrderItem["kind"], string> = { review: "review", concept: "read", build: "build", reflect: "reflect", dsa: "dsa" };
 
 export function OrderList({ orders, onNavigate }: { orders: DailyOrders; onNavigate?: () => void }) {
   if (orders.items.length === 0) return <p className="muted">Nothing due today.</p>;
@@ -28,7 +29,7 @@ export function OrderList({ orders, onNavigate }: { orders: DailyOrders; onNavig
                 <div className="otitle">{i.title}</div>
                 <div className="osub">
                   <span className={`type t-${i.kind}`}>{LABEL[i.kind]}</span>
-                  {i.kind === "review" && <span>{i.progress}/{i.target}</span>}
+                  {(i.kind === "review" || i.kind === "dsa") && <span>{i.progress}/{i.target}</span>}
                   {i.drill > 0 && <span>interleaved</span>}
                   {t && <span>~{t.minutes} min</span>}
                   {i.optional && <span>optional</span>}

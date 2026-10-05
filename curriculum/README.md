@@ -72,3 +72,37 @@ Body with the pass conditions.
 Every quest follows the Learning Rule: Understand, Smallest implementation, Tests, Concurrency, Race detector, Measure, Refactor, Next. If you leave out Measure, Refactor, or the closing reflection, the build adds a generic task for that stage. It also adds a Race stage to every quest marked `concurrency: true`. Write your own version of a stage whenever you have something specific to say.
 
 The build fails if an id is duplicated, a stat or quest reference is unknown, a quest has no cards, or a criterion is invalid. `scripts/build-course.test.ts` also checks that the stages run in order.
+
+## DSA track format
+
+`curriculum/dsa/` holds `track.json` (goal, days, the ALG stat) and one markdown file per phase. `pnpm course:build` writes `curriculum/dsa.track.json` and `curriculum/dsa-roadmap.md`.
+
+```markdown
+# Phase 1: Arrays and Hashing
+
+> Summary.
+
+## Topic: Arrays and hash maps
+id: t01-hashing                 # unique, stable
+days: 3                         # plan days this topic covers
+tags: array, hash-table         # LeetCode tag slugs used to fill the daily target
+
+### pattern
+Markdown notes with a Go snippet.
+
+### problems
+- easy two-sum Two Sum          # difficulty, LeetCode slug, title
+- medium group-anagrams Group Anagrams
+
+### cards
+Q: Question?
+A: Answer.
+
+## Boss: Timed set: arrays and hashing
+id: dboss-p1
+problems: 4
+minutes: 60
+What to do. You pass with ≥ 75% of the problems within the time limit.
+```
+
+The build fails if the topic days don't add up to the track's `days`, if a topic id repeats, or if a problem slug appears in two topics.

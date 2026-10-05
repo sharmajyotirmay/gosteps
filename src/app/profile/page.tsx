@@ -5,7 +5,7 @@ import { Panel, PlayerCard, sharpness, statValue } from "@/components/ui";
 import { ACHIEVEMENTS } from "@/engine/achievements";
 import { setTitle } from "@/engine/game";
 import { levelFromXP, RANKS, rankIndex } from "@/engine/rules";
-import { course } from "@/lib/course";
+import { stats } from "@/lib/course";
 
 export default function ProfilePage() {
   const { state, now, act } = useGame();
@@ -54,7 +54,7 @@ export default function ProfilePage() {
               <table className="data">
                 <thead><tr><th>Stat</th><th>Covers</th><th className="num">Value</th><th className="num">Sharpness</th></tr></thead>
                 <tbody>
-                  {course.stats.map((s) => {
+                  {stats.map((s) => {
                     const sh = sharpness(state, s.id, now);
                     return (
                       <tr key={s.id}>
@@ -68,7 +68,7 @@ export default function ProfilePage() {
                 </tbody>
               </table>
             </div>
-            <p className="small muted" style={{ marginBottom: 0 }}>Value = √(stat XP). Level {level}, {Object.keys(state.progress).length} tasks done, {state.player.totalReviews} reviews, best streak {state.player.bestStreak} days.</p>
+            <p className="small muted" style={{ marginBottom: 0 }}>Value = √(stat XP). Level {level}, {Object.keys(state.progress).filter((k) => !k.startsWith("dsa:")).length} quest tasks done, {new Set(Object.values(state.problems).filter((p) => p.outcome !== "failed").map((p) => p.slug)).size} DSA problems solved, {state.player.totalReviews} reviews, best streak {state.player.bestStreak} days.</p>
           </Panel>
           <Panel title={`Achievements · ${unlocked}/${ACHIEVEMENTS.length}`}>
             <div className="grid-cols" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>

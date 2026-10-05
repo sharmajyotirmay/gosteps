@@ -4,7 +4,7 @@ import { produce } from "immer";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { type Ctx, rollover, today } from "@/engine/game";
 import { initialState, type GameState } from "@/engine/state";
-import { idx } from "@/lib/course";
+import { dsa, idx } from "@/lib/course";
 import { diff, isEmpty, type StorageAdapter } from "@/storage/adapter";
 import { LocalAdapter } from "@/storage/local";
 import { chime } from "./system/sound";
@@ -53,7 +53,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (fn: (draft: GameState, ctx: Ctx) => void, at: Date) => {
       const prev = stateRef.current;
       if (!prev) return;
-      const next = produce(prev, (d) => fn(d, { idx, now: at, newId }));
+      const next = produce(prev, (d) => fn(d, { idx, dsa, now: at, newId }));
       if (next === prev) return;
       stateRef.current = next;
       setState(next);
@@ -94,7 +94,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const t = new Date();
       setNow(t);
       const s = stateRef.current;
-      if (s?.player.onboarded && s.player.lastProcessedDay !== today(s, { idx, now: t, newId })) commit(rollover, t);
+      if (s?.player.onboarded && s.player.lastProcessedDay !== today(s, { idx, dsa, now: t, newId })) commit(rollover, t);
     };
     const iv = setInterval(tick, 30_000);
     const onVis = () => document.visibilityState === "visible" && tick();

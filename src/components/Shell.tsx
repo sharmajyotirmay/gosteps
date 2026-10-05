@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { dueCards } from "@/engine/game";
+import { dayEnd } from "@/engine/day";
+import { dueCards, today } from "@/engine/game";
+import { idx } from "@/lib/course";
 import { useGame } from "./GameProvider";
 import { Onboarding } from "./Onboarding";
 import { SystemButton } from "./system/SystemButton";
@@ -12,6 +14,7 @@ import { SystemWindow } from "./system/SystemWindow";
 const LINKS = [
   { href: "/", label: "Status" },
   { href: "/quests", label: "Quests" },
+  { href: "/dsa", label: "DSA" },
   { href: "/review", label: "Review" },
   { href: "/journal", label: "Journal" },
   { href: "/profile", label: "Profile" },
@@ -22,7 +25,8 @@ const LINKS = [
 export function Shell({ children }: { children: ReactNode }) {
   const { state, now } = useGame();
   const path = usePathname();
-  const due = dueCards(state, now).length;
+  // Same rule as the Review page: everything due by the end of today.
+  const due = dueCards(state, dayEnd(today(state, { idx, now, newId: () => "" }), state.settings.dayBoundaryHour)).length;
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
   return (

@@ -44,7 +44,7 @@ export function parseCriteria(s: string): Criterion[] {
   });
 }
 
-function parseQA(lines: string[], idPrefix: string): QA[] {
+export function parseQA(lines: string[], idPrefix: string): QA[] {
   const out: QA[] = [];
   let cur: { q: string; a: string } | null = null;
   let field: "q" | "a" = "q";

@@ -1,5 +1,7 @@
 import { createEmptyCard, fsrs, type Card, type Grade } from "ts-fsrs";
 import { ACHIEVEMENTS } from "./achievements";
+import { dsaOrderItem } from "./dsa";
+import type { DsaIndex } from "./dsa-track";
 import type { CourseIndex, Quest, Task } from "./course";
 import { addDays, dayEnd, dayKey, diffDays, type DayKey } from "./day";
 import { has, type MethodId } from "./methods";
@@ -40,6 +42,8 @@ export interface Ctx {
   idx: CourseIndex;
   now: Date;
   newId: () => string;
+  /** The DSA track, when loaded. Engine functions skip DSA rules without it. */
+  dsa?: DsaIndex;
 }
 
 const scheduler = fsrs({ enable_fuzz: false });
@@ -77,7 +81,7 @@ export const toFsrs = (c: SerializedFsrs) => ({
   last_review: c.last_review ? new Date(c.last_review) : undefined,
 });
 
-function fromFsrs(c: Card): SerializedFsrs {
+export function fromFsrs(c: Card): SerializedFsrs {
   return {
     due: c.due.toISOString(),
     stability: c.stability,
@@ -230,6 +234,9 @@ export function generateOrders(s: GameState, ctx: Ctx, day: DayKey) {
     }
   }
 
+  const dsaItem = dsaOrderItem(s, ctx, ctx.newId());
+  if (dsaItem) items.push(dsaItem);
+
   if (has(m, "reflection")) {
     items.push(item(ctx, { kind: "reflect", title: "Daily reflection: build, surprise, next", target: 1 }));
   }
@@ -249,7 +256,7 @@ export function isMet(o: DailyOrders | undefined): boolean {
   return workOk && reviewOk;
 }
 
-function checkDailyBonus(s: GameState, ctx: Ctx) {
+export function checkDailyBonus(s: GameState, ctx: Ctx) {
   const o = s.orders[today(s, ctx)];
   if (!o || o.bonusGranted || o.items.length === 0) return;
   if (!o.items.filter((i) => !i.optional).every((i) => i.done)) return;

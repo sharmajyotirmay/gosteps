@@ -1,0 +1,2573 @@
+{
+  "id": "dsa",
+  "version": 1,
+  "title": "DSA: 1000 Problems in 100 Days",
+  "goal": 1000,
+  "days": 100,
+  "language": "go",
+  "description": "Ten phases of patterns, from hashing to dynamic programming, solved in Go. Each day has a topic, a target of about 10 problems, curated anchor problems, and tag lists to fill the rest.",
+  "stats": [
+    {
+      "id": "ALG",
+      "name": "Algorithms",
+      "blurb": "Data structures, patterns, problem solving"
+    }
+  ],
+  "phases": [
+    {
+      "id": "dp1",
+      "index": 1,
+      "title": "Arrays and Hashing",
+      "summary": "The patterns behind most \"easy\" and many \"medium\" problems: hash lookups, prefix sums, two pointers, and sliding windows.",
+      "topics": [
+        {
+          "id": "t01-hashing",
+          "phaseId": "dp1",
+          "index": 1,
+          "title": "Arrays and hash maps",
+          "days": 3,
+          "tags": [
+            "array",
+            "hash-table",
+            "counting"
+          ],
+          "pattern": "A hash map turns \"search the rest of the array\" into an O(1) lookup, so many O(n²) pair searches become O(n). Look for these signals: \"find two items that…\", \"has this appeared before?\", \"group by some key\".\n\n```go\nfunc twoSum(nums []int, target int) []int {\n    seen := make(map[int]int, len(nums)) // value → index\n    for i, n := range nums {\n        if j, ok := seen[target-n]; ok {\n            return []int{j, i}\n        }\n        seen[n] = i\n    }\n    return nil\n}\n```\n\nGo idioms:\n- A set is `map[T]struct{}`.\n- To count lowercase letters, a `[26]int` array is faster than a map, and it's comparable, so it works as a map key when grouping anagrams.",
+          "problems": [
+            {
+              "slug": "two-sum",
+              "title": "Two Sum",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "contains-duplicate",
+              "title": "Contains Duplicate",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "valid-anagram",
+              "title": "Valid Anagram",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "majority-element",
+              "title": "Majority Element",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "group-anagrams",
+              "title": "Group Anagrams",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "top-k-frequent-elements",
+              "title": "Top K Frequent Elements",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "longest-consecutive-sequence",
+              "title": "Longest Consecutive Sequence",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "valid-sudoku",
+              "title": "Valid Sudoku",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t01-hashing.c1",
+              "q": "What signal in a problem suggests a hash map?",
+              "a": "Pair or complement search (\"two items that sum to X\"), \"seen before?\", or grouping by a computed key. The map replaces an inner loop with an O(1) lookup."
+            },
+            {
+              "id": "t01-hashing.c2",
+              "q": "What's the idiomatic set type in Go?",
+              "a": "`map[T]struct{}`. The empty struct takes no memory. Check membership with `_, ok := set[x]`."
+            },
+            {
+              "id": "t01-hashing.c3",
+              "q": "Why can `[26]int` be a map key but `[]int` can't?",
+              "a": "Arrays are comparable value types. Slices aren't comparable, so they can't be map keys."
+            }
+          ]
+        },
+        {
+          "id": "t02-prefix",
+          "phaseId": "dp1",
+          "index": 2,
+          "title": "Prefix sums",
+          "days": 2,
+          "tags": [
+            "prefix-sum"
+          ],
+          "pattern": "Precompute `p[i+1] = p[i] + a[i]`, and any range sum becomes `p[r+1] - p[l]` in O(1). Combine that with a hash map of prefix counts to count subarrays with a given sum:\n\n```go\nfunc subarraySum(nums []int, k int) int {\n    count := map[int]int{0: 1} // prefix sum → times seen\n    sum, res := 0, 0\n    for _, n := range nums {\n        sum += n\n        res += count[sum-k] // a subarray ending here sums to k\n        count[sum]++\n    }\n    return res\n}\n```\n\nThe same idea works in 2-D for matrix region sums, and with products in \"product of array except self\".",
+          "problems": [
+            {
+              "slug": "range-sum-query-immutable",
+              "title": "Range Sum Query - Immutable",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "find-pivot-index",
+              "title": "Find Pivot Index",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "subarray-sum-equals-k",
+              "title": "Subarray Sum Equals K",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "product-of-array-except-self",
+              "title": "Product of Array Except Self",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "continuous-subarray-sum",
+              "title": "Continuous Subarray Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "contiguous-array",
+              "title": "Contiguous Array",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t02-prefix.c1",
+              "q": "How do you get the sum of `a[l..r]` in O(1)?",
+              "a": "With a prefix array `p` where `p[i+1] = p[i] + a[i]`: the sum is `p[r+1] - p[l]`."
+            },
+            {
+              "id": "t02-prefix.c2",
+              "q": "Why seed the prefix-count map with `{0: 1}` in Subarray Sum Equals K?",
+              "a": "It counts subarrays that start at index 0. Their prefix sum minus k equals the empty prefix, which is 0."
+            },
+            {
+              "id": "t02-prefix.c3",
+              "q": "Prefix sums plus a hash map solve which family of problems?",
+              "a": "Counting or finding subarrays whose sum (or a sum-derived property like a remainder) matches a target."
+            }
+          ]
+        },
+        {
+          "id": "t03-two-pointers",
+          "phaseId": "dp1",
+          "index": 3,
+          "title": "Two pointers",
+          "days": 3,
+          "tags": [
+            "two-pointers"
+          ],
+          "pattern": "There are two common shapes.\n1. **Opposite ends** on sorted data: move whichever pointer improves the answer.\n2. **Read/write pointers** in the same direction: compact or partition an array in place.\n\n```go\nfunc twoSumSorted(nums []int, target int) (int, int) {\n    l, r := 0, len(nums)-1\n    for l < r {\n        switch s := nums[l] + nums[r]; {\n        case s == target:\n            return l, r\n        case s < target:\n            l++\n        default:\n            r--\n        }\n    }\n    return -1, -1\n}\n```\n\nFor 3Sum, sort the array, fix `i`, run two pointers on the rest, and skip equal neighbors to avoid duplicate triples.",
+          "problems": [
+            {
+              "slug": "valid-palindrome",
+              "title": "Valid Palindrome",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "move-zeroes",
+              "title": "Move Zeroes",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "remove-duplicates-from-sorted-array",
+              "title": "Remove Duplicates from Sorted Array",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "two-sum-ii-input-array-is-sorted",
+              "title": "Two Sum II - Input Array Is Sorted",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "3sum",
+              "title": "3Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "container-with-most-water",
+              "title": "Container With Most Water",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "sort-colors",
+              "title": "Sort Colors",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "trapping-rain-water",
+              "title": "Trapping Rain Water",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t03-two-pointers.c1",
+              "q": "Why does the two-pointer approach work on a sorted array for pair sums?",
+              "a": "If the sum is too small, only moving the left pointer right can increase it. If it's too big, only moving the right pointer left can decrease it. Each step safely discards one candidate."
+            },
+            {
+              "id": "t03-two-pointers.c2",
+              "q": "How do you avoid duplicate triples in 3Sum?",
+              "a": "Sort first, skip `i` when `nums[i] == nums[i-1]`, and after a match advance `l` and `r` past equal values."
+            },
+            {
+              "id": "t03-two-pointers.c3",
+              "q": "What's the read/write pointer pattern?",
+              "a": "One pointer scans every element and the other marks where the next kept element goes. Used for in-place filtering, like Move Zeroes and Remove Duplicates."
+            }
+          ]
+        },
+        {
+          "id": "t04-sliding-window",
+          "phaseId": "dp1",
+          "index": 4,
+          "title": "Sliding window",
+          "days": 2,
+          "tags": [
+            "sliding-window"
+          ],
+          "pattern": "Keep a window `[l, r]`. Expand `r`, and while the window breaks the rule, shrink `l`. Each index enters and leaves once, so the loop is O(n).\n\n```go\nfunc lengthOfLongestSubstring(s string) int {\n    last := map[byte]int{}\n    best, l := 0, 0\n    for r := 0; r < len(s); r++ {\n        if i, ok := last[s[r]]; ok && i >= l {\n            l = i + 1 // jump past the previous occurrence\n        }\n        last[s[r]] = r\n        best = max(best, r-l+1)\n    }\n    return best\n}\n```\n\nSignals: \"longest/shortest contiguous subarray or substring such that…\". With a fixed size k, slide both ends together.",
+          "problems": [
+            {
+              "slug": "best-time-to-buy-and-sell-stock",
+              "title": "Best Time to Buy and Sell Stock",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "longest-substring-without-repeating-characters",
+              "title": "Longest Substring Without Repeating Characters",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "longest-repeating-character-replacement",
+              "title": "Longest Repeating Character Replacement",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "permutation-in-string",
+              "title": "Permutation in String",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-size-subarray-sum",
+              "title": "Minimum Size Subarray Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "fruit-into-baskets",
+              "title": "Fruit Into Baskets",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-window-substring",
+              "title": "Minimum Window Substring",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t04-sliding-window.c1",
+              "q": "Why is the variable sliding window O(n) even though it has a nested loop?",
+              "a": "Each index is added once (when `r` passes it) and removed at most once (when `l` passes it), so total work is about 2n."
+            },
+            {
+              "id": "t04-sliding-window.c2",
+              "q": "What phrase in a problem suggests a sliding window?",
+              "a": "\"Longest/shortest contiguous subarray or substring that satisfies a condition\", where the condition can be updated incrementally."
+            },
+            {
+              "id": "t04-sliding-window.c3",
+              "q": "Fixed vs variable window?",
+              "a": "Fixed size k: move `l` and `r` together. Variable: expand `r` and shrink `l` only while the window is invalid (or valid, for minimum problems)."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p1",
+        "title": "Timed set: arrays and hashing",
+        "problems": 4,
+        "minutes": 60,
+        "body": "Pick four unseen problems from this phase's tags (at least two medium). Start the timer and solve them in Go without hints. You pass with 3 of 4 accepted within 60 minutes."
+      }
+    },
+    {
+      "id": "dp2",
+      "index": 2,
+      "title": "Stacks, Queues, and Linked Lists",
+      "summary": "Linear structures with a twist: matching, \"next greater\" questions, pointer surgery, and deques.",
+      "topics": [
+        {
+          "id": "t05-stacks",
+          "phaseId": "dp2",
+          "index": 5,
+          "title": "Stacks",
+          "days": 3,
+          "tags": [
+            "stack"
+          ],
+          "pattern": "A Go slice is a stack: push with `append`, pop with `s = s[:len(s)-1]`. Use a stack when the most recent unmatched thing decides what happens next: brackets, undo, nested decoding, expression evaluation.\n\n```go\nfunc isValid(s string) bool {\n    pair := map[rune]rune{')': '(', ']': '[', '}': '{'}\n    var st []rune\n    for _, c := range s {\n        if open, ok := pair[c]; ok {\n            if len(st) == 0 || st[len(st)-1] != open {\n                return false\n            }\n            st = st[:len(st)-1]\n        } else {\n            st = append(st, c)\n        }\n    }\n    return len(st) == 0\n}\n```",
+          "problems": [
+            {
+              "slug": "valid-parentheses",
+              "title": "Valid Parentheses",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "backspace-string-compare",
+              "title": "Backspace String Compare",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "min-stack",
+              "title": "Min Stack",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "evaluate-reverse-polish-notation",
+              "title": "Evaluate Reverse Polish Notation",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "generate-parentheses",
+              "title": "Generate Parentheses",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "decode-string",
+              "title": "Decode String",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "simplify-path",
+              "title": "Simplify Path",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t05-stacks.c1",
+              "q": "How do you push and pop with a Go slice?",
+              "a": "Push: `st = append(st, x)`. Pop: `x := st[len(st)-1]; st = st[:len(st)-1]`. Check `len(st) > 0` first."
+            },
+            {
+              "id": "t05-stacks.c2",
+              "q": "How does Min Stack return the minimum in O(1)?",
+              "a": "Each entry also stores the minimum at the time it was pushed (or a second stack tracks minimums), so the top always knows the current min."
+            },
+            {
+              "id": "t05-stacks.c3",
+              "q": "What problem shape signals a stack?",
+              "a": "The latest unmatched or unfinished item decides the next action: matching brackets, nested structures, undo, or evaluating postfix expressions."
+            }
+          ]
+        },
+        {
+          "id": "t06-monotonic-stack",
+          "phaseId": "dp2",
+          "index": 6,
+          "title": "Monotonic stack",
+          "days": 2,
+          "tags": [
+            "monotonic-stack"
+          ],
+          "pattern": "Keep indices in the stack so that their values stay in decreasing order. When a bigger value arrives, it's the \"next greater element\" for everything it pops.\n\n```go\nfunc dailyTemperatures(t []int) []int {\n    res := make([]int, len(t))\n    var st []int // indices, temperatures decreasing\n    for i, x := range t {\n        for len(st) > 0 && t[st[len(st)-1]] < x {\n            j := st[len(st)-1]\n            st = st[:len(st)-1]\n            res[j] = i - j\n        }\n        st = append(st, i)\n    }\n    return res\n}\n```\n\nEach index is pushed and popped once, so this is O(n). Largest Rectangle in Histogram uses an increasing stack, and the pop computes the area bounded by the popped bar.",
+          "problems": [
+            {
+              "slug": "next-greater-element-i",
+              "title": "Next Greater Element I",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "daily-temperatures",
+              "title": "Daily Temperatures",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "next-greater-element-ii",
+              "title": "Next Greater Element II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "online-stock-span",
+              "title": "Online Stock Span",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "car-fleet",
+              "title": "Car Fleet",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "remove-k-digits",
+              "title": "Remove K Digits",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "largest-rectangle-in-histogram",
+              "title": "Largest Rectangle in Histogram",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t06-monotonic-stack.c1",
+              "q": "What question does a monotonic decreasing stack answer?",
+              "a": "For each element, the next (or previous) greater element. Popping happens exactly when that answer is found."
+            },
+            {
+              "id": "t06-monotonic-stack.c2",
+              "q": "Why push indices instead of values?",
+              "a": "You usually need distances or positions (days until warmer, rectangle width), and you can always look up the value from the index."
+            },
+            {
+              "id": "t06-monotonic-stack.c3",
+              "q": "How do you handle circular arrays, as in Next Greater Element II?",
+              "a": "Iterate `2n` times using `i % n`, and only push during the first pass."
+            }
+          ]
+        },
+        {
+          "id": "t07-linked-lists",
+          "phaseId": "dp2",
+          "index": 7,
+          "title": "Linked lists",
+          "days": 3,
+          "tags": [
+            "linked-list"
+          ],
+          "pattern": "Three tools cover most list problems.\n1. **A dummy head** removes edge cases at the front.\n2. **Fast and slow pointers** find the middle, detect cycles, or find the nth node from the end.\n3. **In-place reversal.**\n\n```go\ntype ListNode struct {\n    Val  int\n    Next *ListNode\n}\n\nfunc reverseList(head *ListNode) *ListNode {\n    var prev *ListNode\n    for cur := head; cur != nil; {\n        next := cur.Next\n        cur.Next = prev\n        prev, cur = cur, next\n    }\n    return prev\n}\n```\n\nDraw the pointers before you write the code. Most bugs are a lost `next` reference.",
+          "problems": [
+            {
+              "slug": "reverse-linked-list",
+              "title": "Reverse Linked List",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "merge-two-sorted-lists",
+              "title": "Merge Two Sorted Lists",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "linked-list-cycle",
+              "title": "Linked List Cycle",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "reorder-list",
+              "title": "Reorder List",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "remove-nth-node-from-end-of-list",
+              "title": "Remove Nth Node From End of List",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "add-two-numbers",
+              "title": "Add Two Numbers",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "copy-list-with-random-pointer",
+              "title": "Copy List with Random Pointer",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-the-duplicate-number",
+              "title": "Find the Duplicate Number",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "reverse-nodes-in-k-group",
+              "title": "Reverse Nodes in k-Group",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t07-linked-lists.c1",
+              "q": "Why use a dummy head node?",
+              "a": "The real head may change (it gets removed, or a merge starts with either list). A dummy gives one uniform \"previous\" node, and you return `dummy.Next`."
+            },
+            {
+              "id": "t07-linked-lists.c2",
+              "q": "How do fast and slow pointers find the middle of a list?",
+              "a": "Slow moves 1 step and fast moves 2. When fast reaches the end, slow is at the middle."
+            },
+            {
+              "id": "t07-linked-lists.c3",
+              "q": "How does Floyd's algorithm detect a cycle?",
+              "a": "Fast (2 steps) and slow (1 step) meet inside the cycle if one exists. Resetting one pointer to the head and moving both 1 step finds the cycle's start."
+            }
+          ]
+        },
+        {
+          "id": "t08-queues",
+          "phaseId": "dp2",
+          "index": 8,
+          "title": "Queues and deques",
+          "days": 2,
+          "tags": [
+            "queue",
+            "monotonic-queue"
+          ],
+          "pattern": "A slice works as a FIFO queue: `q = append(q, x)` to push, `x, q = q[0], q[1:]` to pop. BFS uses one.\n\nA **monotonic deque** keeps candidates in decreasing order, which gives sliding-window maximums in O(n):\n\n```go\nfunc maxSlidingWindow(nums []int, k int) []int {\n    var dq, res []int // dq holds indices; values decreasing\n    for i, x := range nums {\n        if len(dq) > 0 && dq[0] <= i-k {\n            dq = dq[1:] // front fell out of the window\n        }\n        for len(dq) > 0 && nums[dq[len(dq)-1]] <= x {\n            dq = dq[:len(dq)-1]\n        }\n        dq = append(dq, i)\n        if i >= k-1 {\n            res = append(res, nums[dq[0]])\n        }\n    }\n    return res\n}\n```",
+          "problems": [
+            {
+              "slug": "implement-queue-using-stacks",
+              "title": "Implement Queue using Stacks",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "number-of-recent-calls",
+              "title": "Number of Recent Calls",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "design-circular-queue",
+              "title": "Design Circular Queue",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "dota2-senate",
+              "title": "Dota2 Senate",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "sliding-window-maximum",
+              "title": "Sliding Window Maximum",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "shortest-subarray-with-sum-at-least-k",
+              "title": "Shortest Subarray with Sum at Least K",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t08-queues.c1",
+              "q": "How does a monotonic deque give the max of each sliding window?",
+              "a": "It holds indices whose values are decreasing. The front is the window max. You pop from the front when it leaves the window, and from the back when a bigger value arrives."
+            },
+            {
+              "id": "t08-queues.c2",
+              "q": "How do you implement a queue with two stacks in amortized O(1)?",
+              "a": "Push onto the \"in\" stack. To pop, if \"out\" is empty, move everything from \"in\" to \"out\" (which reverses the order), then pop from \"out\"."
+            },
+            {
+              "id": "t08-queues.c3",
+              "q": "What's the memory gotcha with `q = q[1:]` in Go?",
+              "a": "The backing array isn't freed while the slice still references it. For long-running queues, copy occasionally or use a ring buffer."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p2",
+        "title": "Timed set: stacks and lists",
+        "problems": 4,
+        "minutes": 60,
+        "body": "Four unseen problems: one stack, one monotonic stack, one linked list, and one of your choice. You pass with 3 of 4 within 60 minutes."
+      }
+    },
+    {
+      "id": "dp3",
+      "index": 3,
+      "title": "Binary Search and Sorting",
+      "summary": "Halve the search space: on arrays, then on the answer itself. Sort with comparators, and walk matrices.",
+      "topics": [
+        {
+          "id": "t09-binary-search",
+          "phaseId": "dp3",
+          "index": 9,
+          "title": "Binary search on arrays",
+          "days": 3,
+          "tags": [
+            "binary-search"
+          ],
+          "pattern": "Pick one invariant and keep it. The half-open form `[lo, hi)` finds the **first index where a predicate becomes true**:\n\n```go\n// first index i with nums[i] >= target (len(nums) if none)\nfunc lowerBound(nums []int, target int) int {\n    lo, hi := 0, len(nums)\n    for lo < hi {\n        mid := lo + (hi-lo)/2\n        if nums[mid] >= target {\n            hi = mid\n        } else {\n            lo = mid + 1\n        }\n    }\n    return lo\n}\n```\n\nThe standard library has `slices.BinarySearch(s, x)` and `sort.Search(n, pred)`. For a rotated array, one half is always sorted: check whether the target lies in that half.",
+          "problems": [
+            {
+              "slug": "binary-search",
+              "title": "Binary Search",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "search-insert-position",
+              "title": "Search Insert Position",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "search-a-2d-matrix",
+              "title": "Search a 2D Matrix",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-first-and-last-position-of-element-in-sorted-array",
+              "title": "Find First and Last Position of Element in Sorted Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-minimum-in-rotated-sorted-array",
+              "title": "Find Minimum in Rotated Sorted Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "search-in-rotated-sorted-array",
+              "title": "Search in Rotated Sorted Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-peak-element",
+              "title": "Find Peak Element",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "time-based-key-value-store",
+              "title": "Time Based Key-Value Store",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t09-binary-search.c1",
+              "q": "Why write `mid := lo + (hi-lo)/2`?",
+              "a": "It avoids integer overflow from `lo+hi` in fixed-width languages. In Go, `int` is 64-bit, but the habit is still correct."
+            },
+            {
+              "id": "t09-binary-search.c2",
+              "q": "What does the `[lo, hi)` lower-bound loop return?",
+              "a": "The first index where the predicate is true, or `len` if it's never true. It never needs a separate `found` check."
+            },
+            {
+              "id": "t09-binary-search.c3",
+              "q": "In a rotated sorted array, how do you know which half to search?",
+              "a": "Compare `nums[lo]` with `nums[mid]`. If `nums[lo] <= nums[mid]`, the left half is sorted. Check whether the target lies within that sorted half's range."
+            }
+          ]
+        },
+        {
+          "id": "t10-search-answer",
+          "phaseId": "dp3",
+          "index": 10,
+          "title": "Binary search on the answer",
+          "days": 3,
+          "tags": [
+            "binary-search"
+          ],
+          "pattern": "When the answer is a number in `[lo, hi]` and \"is `x` feasible?\" is **monotone** (false, false, true, true…), binary search the answer and test feasibility in O(n).\n\n```go\nfunc minEatingSpeed(piles []int, h int) int {\n    lo, hi := 1, slices.Max(piles)\n    for lo < hi {\n        k := lo + (hi-lo)/2\n        hours := 0\n        for _, p := range piles {\n            hours += (p + k - 1) / k // ceil(p/k)\n        }\n        if hours <= h {\n            hi = k // k works; try smaller\n        } else {\n            lo = k + 1\n        }\n    }\n    return lo\n}\n```\n\nSignals: \"minimum possible maximum\", \"smallest capacity or speed such that…\".",
+          "problems": [
+            {
+              "slug": "sqrtx",
+              "title": "Sqrt(x)",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "koko-eating-bananas",
+              "title": "Koko Eating Bananas",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "capacity-to-ship-packages-within-d-days",
+              "title": "Capacity To Ship Packages Within D Days",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-number-of-days-to-make-m-bouquets",
+              "title": "Minimum Number of Days to Make m Bouquets",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "split-array-largest-sum",
+              "title": "Split Array Largest Sum",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "median-of-two-sorted-arrays",
+              "title": "Median of Two Sorted Arrays",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t10-search-answer.c1",
+              "q": "When can you binary search on the answer?",
+              "a": "When feasibility is monotone in the answer: if `x` works, every larger (or smaller) value also works, and you can check one candidate efficiently."
+            },
+            {
+              "id": "t10-search-answer.c2",
+              "q": "How do you compute ceil(p/k) with integers?",
+              "a": "`(p + k - 1) / k` for positive values."
+            },
+            {
+              "id": "t10-search-answer.c3",
+              "q": "What phrase in a problem hints at binary search on the answer?",
+              "a": "\"Minimize the maximum\" or \"maximize the minimum\", or \"smallest speed/capacity/days such that a condition holds\"."
+            }
+          ]
+        },
+        {
+          "id": "t11-sorting",
+          "phaseId": "dp3",
+          "index": 11,
+          "title": "Sorting and comparators",
+          "days": 2,
+          "tags": [
+            "sorting"
+          ],
+          "pattern": "Sorting is often a preprocessing step that unlocks two pointers, greedy choices, or merging. In Go 1.21+:\n\n```go\nslices.SortFunc(people, func(a, b Person) int {\n    if c := cmp.Compare(a.Age, b.Age); c != 0 {\n        return c\n    }\n    return strings.Compare(a.Name, b.Name) // tie-break\n})\n```\n\nUse `slices.SortStableFunc` when the order of equal elements matters. Know quickselect (average O(n) for the k-th element) and counting sort (for a small value range).",
+          "problems": [
+            {
+              "slug": "squares-of-a-sorted-array",
+              "title": "Squares of a Sorted Array",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "relative-sort-array",
+              "title": "Relative Sort Array",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "sort-an-array",
+              "title": "Sort an Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "sort-characters-by-frequency",
+              "title": "Sort Characters By Frequency",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "largest-number",
+              "title": "Largest Number",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "h-index",
+              "title": "H-Index",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "kth-largest-element-in-an-array",
+              "title": "Kth Largest Element in an Array",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t11-sorting.c1",
+              "q": "What does a Go comparator for `slices.SortFunc` return?",
+              "a": "A negative number if a < b, zero if they're equal, and a positive number if a > b. `cmp.Compare` produces exactly that."
+            },
+            {
+              "id": "t11-sorting.c2",
+              "q": "When do you need a stable sort?",
+              "a": "When equal elements must keep their original relative order, for example after an earlier sort by a secondary key."
+            },
+            {
+              "id": "t11-sorting.c3",
+              "q": "What's the expected and worst-case time of quickselect?",
+              "a": "O(n) expected and O(n²) worst case. Random pivots make the worst case unlikely."
+            }
+          ]
+        },
+        {
+          "id": "t12-matrix",
+          "phaseId": "dp3",
+          "index": 12,
+          "title": "Matrix and simulation",
+          "days": 2,
+          "tags": [
+            "matrix",
+            "simulation"
+          ],
+          "pattern": "Use a direction table and bounds checks instead of four copies of the same code:\n\n```go\nvar dirs = [4][2]int{{0, 1}, {1, 0}, {0, -1}, {-1, 0}} // right, down, left, up\n\nfunc inBounds(g [][]int, r, c int) bool {\n    return r >= 0 && r < len(g) && c >= 0 && c < len(g[0])\n}\n```\n\nTo rotate 90° clockwise in place, transpose and then reverse each row. To update in place without extra memory, encode the old and new state in the same cell (for example, with an extra bit).",
+          "problems": [
+            {
+              "slug": "transpose-matrix",
+              "title": "Transpose Matrix",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "plus-one",
+              "title": "Plus One",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "happy-number",
+              "title": "Happy Number",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "rotate-image",
+              "title": "Rotate Image",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "spiral-matrix",
+              "title": "Spiral Matrix",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "set-matrix-zeroes",
+              "title": "Set Matrix Zeroes",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "game-of-life",
+              "title": "Game of Life",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t12-matrix.c1",
+              "q": "How do you rotate an n×n matrix 90° clockwise in place?",
+              "a": "Transpose it (swap `m[i][j]` with `m[j][i]` for `j > i`), then reverse each row."
+            },
+            {
+              "id": "t12-matrix.c2",
+              "q": "How do you update a grid in place when new values depend on old neighbors?",
+              "a": "Encode both states in one cell (for example, bit 0 holds the old value and bit 1 the new one), then finish with a second pass."
+            },
+            {
+              "id": "t12-matrix.c3",
+              "q": "Why use a directions array?",
+              "a": "It replaces four near-identical blocks with a single loop, which removes copy-paste bugs."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p3",
+        "title": "Timed set: search and sort",
+        "problems": 4,
+        "minutes": 60,
+        "body": "Four unseen problems, including at least one \"binary search on the answer\". You pass with 3 of 4 within 60 minutes."
+      }
+    },
+    {
+      "id": "dp4",
+      "index": 4,
+      "title": "Trees",
+      "summary": "Recursion with structure: depth-first and breadth-first traversal, BST invariants, and building trees.",
+      "topics": [
+        {
+          "id": "t13-tree-dfs",
+          "phaseId": "dp4",
+          "index": 13,
+          "title": "Depth-first traversal",
+          "days": 3,
+          "tags": [
+            "binary-tree",
+            "depth-first-search"
+          ],
+          "pattern": "Most tree problems are \"compute something for each subtree and combine the results\". Trust the recursion: solve the problem for `root` assuming the children already return correct answers.\n\n```go\ntype TreeNode struct {\n    Val         int\n    Left, Right *TreeNode\n}\n\nfunc maxDepth(root *TreeNode) int {\n    if root == nil {\n        return 0\n    }\n    return 1 + max(maxDepth(root.Left), maxDepth(root.Right))\n}\n```\n\nIf the answer isn't what the function returns (diameter, for example), return the height and update a captured variable for the answer.",
+          "problems": [
+            {
+              "slug": "invert-binary-tree",
+              "title": "Invert Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "maximum-depth-of-binary-tree",
+              "title": "Maximum Depth of Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "diameter-of-binary-tree",
+              "title": "Diameter of Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "balanced-binary-tree",
+              "title": "Balanced Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "same-tree",
+              "title": "Same Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "subtree-of-another-tree",
+              "title": "Subtree of Another Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "path-sum",
+              "title": "Path Sum",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "binary-tree-inorder-traversal",
+              "title": "Binary Tree Inorder Traversal",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "count-good-nodes-in-binary-tree",
+              "title": "Count Good Nodes in Binary Tree",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t13-tree-dfs.c1",
+              "q": "What's the \"return one thing, track another\" trick in tree DFS?",
+              "a": "The function returns what the parent needs (such as height), while a captured variable records the global answer (such as the best diameter seen so far)."
+            },
+            {
+              "id": "t13-tree-dfs.c2",
+              "q": "Preorder vs inorder vs postorder: when is the node processed?",
+              "a": "Preorder: before its children. Inorder: between left and right. Postorder: after both children. Use postorder when the answer needs the children's results."
+            },
+            {
+              "id": "t13-tree-dfs.c3",
+              "q": "What's the base case in almost every tree recursion?",
+              "a": "`root == nil`. Return the neutral value (0, true, or nil)."
+            }
+          ]
+        },
+        {
+          "id": "t14-tree-bfs",
+          "phaseId": "dp4",
+          "index": 14,
+          "title": "Breadth-first and level order",
+          "days": 2,
+          "tags": [
+            "breadth-first-search",
+            "binary-tree"
+          ],
+          "pattern": "Process one level at a time by taking the queue's length at the start of each level:\n\n```go\nfunc levelOrder(root *TreeNode) [][]int {\n    var res [][]int\n    if root == nil {\n        return res\n    }\n    q := []*TreeNode{root}\n    for len(q) > 0 {\n        level := make([]int, 0, len(q))\n        for range len(q) { // Go 1.22: range over int\n            n := q[0]\n            q = q[1:]\n            level = append(level, n.Val)\n            if n.Left != nil { q = append(q, n.Left) }\n            if n.Right != nil { q = append(q, n.Right) }\n        }\n        res = append(res, level)\n    }\n    return res\n}\n```\n\nBFS gives the **minimum depth** quickly, because it stops at the first leaf.",
+          "problems": [
+            {
+              "slug": "average-of-levels-in-binary-tree",
+              "title": "Average of Levels in Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "minimum-depth-of-binary-tree",
+              "title": "Minimum Depth of Binary Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "binary-tree-level-order-traversal",
+              "title": "Binary Tree Level Order Traversal",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "binary-tree-right-side-view",
+              "title": "Binary Tree Right Side View",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "binary-tree-zigzag-level-order-traversal",
+              "title": "Binary Tree Zigzag Level Order Traversal",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximum-width-of-binary-tree",
+              "title": "Maximum Width of Binary Tree",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t14-tree-bfs.c1",
+              "q": "How do you separate levels in a BFS?",
+              "a": "Record `len(q)` at the start of each level and pop exactly that many nodes before moving on."
+            },
+            {
+              "id": "t14-tree-bfs.c2",
+              "q": "Why is BFS better than DFS for minimum depth?",
+              "a": "BFS reaches the shallowest leaf first and can stop there. DFS might explore a deep branch completely before finding it."
+            },
+            {
+              "id": "t14-tree-bfs.c3",
+              "q": "How do you compute width when nodes are missing?",
+              "a": "Give each node a position index (`2i` and `2i+1` for its children) and take `last - first + 1` per level."
+            }
+          ]
+        },
+        {
+          "id": "t15-bst",
+          "phaseId": "dp4",
+          "index": 15,
+          "title": "Binary search trees",
+          "days": 3,
+          "tags": [
+            "binary-search-tree"
+          ],
+          "pattern": "In a BST, everything in the left subtree is less than the node and everything in the right subtree is greater, **recursively**. Validate with bounds rather than by comparing only with direct children:\n\n```go\nfunc isValidBST(root *TreeNode) bool {\n    var ok func(n *TreeNode, lo, hi *int) bool\n    ok = func(n *TreeNode, lo, hi *int) bool {\n        if n == nil {\n            return true\n        }\n        if (lo != nil && n.Val <= *lo) || (hi != nil && n.Val >= *hi) {\n            return false\n        }\n        return ok(n.Left, lo, &n.Val) && ok(n.Right, &n.Val, hi)\n    }\n    return ok(root, nil, nil)\n}\n```\n\nAn inorder traversal of a BST visits values in sorted order. Many BST problems become \"inorder plus a counter\".",
+          "problems": [
+            {
+              "slug": "convert-sorted-array-to-binary-search-tree",
+              "title": "Convert Sorted Array to Binary Search Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "search-in-a-binary-search-tree",
+              "title": "Search in a Binary Search Tree",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "validate-binary-search-tree",
+              "title": "Validate Binary Search Tree",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "kth-smallest-element-in-a-bst",
+              "title": "Kth Smallest Element in a BST",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "lowest-common-ancestor-of-a-binary-search-tree",
+              "title": "Lowest Common Ancestor of a Binary Search Tree",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "insert-into-a-binary-search-tree",
+              "title": "Insert into a Binary Search Tree",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "delete-node-in-a-bst",
+              "title": "Delete Node in a BST",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t15-bst.c1",
+              "q": "Why isn't checking `left.Val < node.Val < right.Val` enough to validate a BST?",
+              "a": "The rule applies to entire subtrees. A deep left descendant could still be larger than an ancestor. Pass lower and upper bounds down instead."
+            },
+            {
+              "id": "t15-bst.c2",
+              "q": "What order does an inorder traversal of a BST produce?",
+              "a": "Ascending sorted order."
+            },
+            {
+              "id": "t15-bst.c3",
+              "q": "How do you find the LCA in a BST without searching both sides?",
+              "a": "Walk down from the root. If both values are smaller, go left. If both are larger, go right. Otherwise the current node is the LCA."
+            }
+          ]
+        },
+        {
+          "id": "t16-tree-build",
+          "phaseId": "dp4",
+          "index": 16,
+          "title": "Construction and path problems",
+          "days": 2,
+          "tags": [
+            "binary-tree",
+            "tree"
+          ],
+          "pattern": "**Construction.** Preorder gives you the root, and the root's position in the inorder sequence splits the left and right subtrees. Use a map from value to inorder index so the lookup is O(1).\n\n**Path sums.** A path can bend at any node, so return the best *single-branch* gain upward and update a global best with `left + node + right`:\n\n```go\nfunc maxPathSum(root *TreeNode) int {\n    best := math.MinInt\n    var gain func(*TreeNode) int\n    gain = func(n *TreeNode) int {\n        if n == nil {\n            return 0\n        }\n        l, r := max(gain(n.Left), 0), max(gain(n.Right), 0)\n        best = max(best, n.Val+l+r)\n        return n.Val + max(l, r)\n    }\n    gain(root)\n    return best\n}\n```",
+          "problems": [
+            {
+              "slug": "construct-binary-tree-from-preorder-and-inorder-traversal",
+              "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "lowest-common-ancestor-of-a-binary-tree",
+              "title": "Lowest Common Ancestor of a Binary Tree",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "path-sum-ii",
+              "title": "Path Sum II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "flatten-binary-tree-to-linked-list",
+              "title": "Flatten Binary Tree to Linked List",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "binary-tree-maximum-path-sum",
+              "title": "Binary Tree Maximum Path Sum",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "serialize-and-deserialize-binary-tree",
+              "title": "Serialize and Deserialize Binary Tree",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t16-tree-build.c1",
+              "q": "How do preorder and inorder sequences determine a tree?",
+              "a": "Preorder's first element is the root. Its index in inorder splits the inorder sequence into the left and right subtrees, and you recurse on each."
+            },
+            {
+              "id": "t16-tree-build.c2",
+              "q": "In Max Path Sum, why does the function return `n.Val + max(l, r)` but update `best` with `n.Val + l + r`?",
+              "a": "A parent can extend only one branch of the path, but the best path may bend at this node and use both branches."
+            },
+            {
+              "id": "t16-tree-build.c3",
+              "q": "Why clamp child gains with `max(gain, 0)`?",
+              "a": "A negative branch only lowers the sum, so it's better to leave it out."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p4",
+        "title": "Timed set: trees",
+        "problems": 4,
+        "minutes": 60,
+        "body": "Four unseen tree problems, with at least one BFS and one BST. You pass with 3 of 4 within 60 minutes."
+      }
+    },
+    {
+      "id": "dp5",
+      "index": 5,
+      "title": "Heaps, Intervals, and Greedy",
+      "summary": "Always know the best candidate (heaps), sort and sweep (intervals), and make the locally right choice and prove it (greedy).",
+      "topics": [
+        {
+          "id": "t17-heaps",
+          "phaseId": "dp5",
+          "index": 17,
+          "title": "Heaps and priority queues",
+          "days": 3,
+          "tags": [
+            "heap-priority-queue"
+          ],
+          "pattern": "`container/heap` turns any slice type with five methods into a min-heap:\n\n```go\ntype IntHeap []int\n\nfunc (h IntHeap) Len() int           { return len(h) }\nfunc (h IntHeap) Less(i, j int) bool { return h[i] < h[j] } // min-heap\nfunc (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }\nfunc (h *IntHeap) Push(x any)        { *h = append(*h, x.(int)) }\nfunc (h *IntHeap) Pop() any {\n    old := *h\n    x := old[len(old)-1]\n    *h = old[:len(old)-1]\n    return x\n}\n\n// k-th largest: keep a min-heap of size k\nfunc findKthLargest(nums []int, k int) int {\n    h := &IntHeap{}\n    for _, n := range nums {\n        heap.Push(h, n)\n        if h.Len() > k {\n            heap.Pop(h)\n        }\n    }\n    return (*h)[0]\n}\n```\n\n**Top-k largest uses a min-heap of size k**, so the smallest of the top k is always on top, ready to be evicted. Two heaps (a max-heap for the lower half and a min-heap for the upper half) give a running median.",
+          "problems": [
+            {
+              "slug": "kth-largest-element-in-a-stream",
+              "title": "Kth Largest Element in a Stream",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "last-stone-weight",
+              "title": "Last Stone Weight",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "k-closest-points-to-origin",
+              "title": "K Closest Points to Origin",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "top-k-frequent-words",
+              "title": "Top K Frequent Words",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "task-scheduler",
+              "title": "Task Scheduler",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "design-twitter",
+              "title": "Design Twitter",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-median-from-data-stream",
+              "title": "Find Median from Data Stream",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "merge-k-sorted-lists",
+              "title": "Merge k Sorted Lists",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t17-heaps.c1",
+              "q": "Why does \"k largest\" use a *min*-heap of size k?",
+              "a": "The heap's top is the smallest of the k largest seen so far, so any new element bigger than it replaces it in O(log k)."
+            },
+            {
+              "id": "t17-heaps.c2",
+              "q": "Which five methods does `container/heap` need?",
+              "a": "Len, Less, Swap (from sort.Interface), plus Push(any) and Pop() any on a pointer receiver."
+            },
+            {
+              "id": "t17-heaps.c3",
+              "q": "How do two heaps maintain a running median?",
+              "a": "A max-heap holds the lower half and a min-heap the upper half, with sizes differing by at most 1. The median comes from the top of one or both."
+            }
+          ]
+        },
+        {
+          "id": "t18-intervals",
+          "phaseId": "dp5",
+          "index": 18,
+          "title": "Intervals",
+          "days": 3,
+          "tags": [
+            "sorting",
+            "line-sweep"
+          ],
+          "pattern": "Sort by start. Then each interval either overlaps the last merged one (extend it) or starts a new one:\n\n```go\nfunc merge(iv [][]int) [][]int {\n    slices.SortFunc(iv, func(a, b []int) int { return cmp.Compare(a[0], b[0]) })\n    var res [][]int\n    for _, x := range iv {\n        if n := len(res); n > 0 && x[0] <= res[n-1][1] {\n            res[n-1][1] = max(res[n-1][1], x[1])\n        } else {\n            res = append(res, x)\n        }\n    }\n    return res\n}\n```\n\nTo keep the maximum number of non-overlapping intervals, sort by **end** and greedily keep whichever finishes first. To count overlap at any moment, use a sweep over +1/-1 events.",
+          "problems": [
+            {
+              "slug": "summary-ranges",
+              "title": "Summary Ranges",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "merge-intervals",
+              "title": "Merge Intervals",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "insert-interval",
+              "title": "Insert Interval",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "non-overlapping-intervals",
+              "title": "Non-overlapping Intervals",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-number-of-arrows-to-burst-balloons",
+              "title": "Minimum Number of Arrows to Burst Balloons",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "interval-list-intersections",
+              "title": "Interval List Intersections",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "my-calendar-i",
+              "title": "My Calendar I",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-interval-to-include-each-query",
+              "title": "Minimum Interval to Include Each Query",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t18-intervals.c1",
+              "q": "Sort intervals by start or by end?",
+              "a": "By start to merge or insert. By end to maximize non-overlapping intervals or minimize removals (greedy \"finish first\")."
+            },
+            {
+              "id": "t18-intervals.c2",
+              "q": "When do `[a,b]` and `[c,d]` overlap, given that `a <= c`?",
+              "a": "When `c <= b`. Check whether the problem treats touching endpoints as overlapping."
+            },
+            {
+              "id": "t18-intervals.c3",
+              "q": "What's a line sweep?",
+              "a": "Turn each interval into events (+1 at start, -1 at end), sort the events, and scan them while tracking the running count."
+            }
+          ]
+        },
+        {
+          "id": "t19-greedy",
+          "phaseId": "dp5",
+          "index": 19,
+          "title": "Greedy",
+          "days": 4,
+          "tags": [
+            "greedy"
+          ],
+          "pattern": "A greedy algorithm makes the locally best choice and never revisits it. It's correct only if you can argue that **some optimal solution starts with that choice** (an exchange argument). Try small counterexamples before you commit.\n\n```go\nfunc canJump(nums []int) bool {\n    reach := 0\n    for i, n := range nums {\n        if i > reach {\n            return false // can't even get here\n        }\n        reach = max(reach, i+n)\n    }\n    return true\n}\n```\n\nKadane's algorithm (Maximum Subarray) is greedy too: drop the running sum once it goes negative.",
+          "problems": [
+            {
+              "slug": "assign-cookies",
+              "title": "Assign Cookies",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "lemonade-change",
+              "title": "Lemonade Change",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "maximum-subarray",
+              "title": "Maximum Subarray",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "jump-game",
+              "title": "Jump Game",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "jump-game-ii",
+              "title": "Jump Game II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "gas-station",
+              "title": "Gas Station",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "hand-of-straights",
+              "title": "Hand of Straights",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "merge-triplets-to-form-target-triplet",
+              "title": "Merge Triplets to Form Target Triplet",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "partition-labels",
+              "title": "Partition Labels",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "valid-parenthesis-string",
+              "title": "Valid Parenthesis String",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "candy",
+              "title": "Candy",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t19-greedy.c1",
+              "q": "How do you justify a greedy choice?",
+              "a": "With an exchange argument: take any optimal solution, swap in the greedy choice, and show the result is no worse."
+            },
+            {
+              "id": "t19-greedy.c2",
+              "q": "State Kadane's algorithm in one line.",
+              "a": "`cur = max(x, cur + x)` and `best = max(best, cur)`. Start a new subarray whenever extending the current one would hurt."
+            },
+            {
+              "id": "t19-greedy.c3",
+              "q": "Why does Gas Station restart from `i+1` when the tank goes negative?",
+              "a": "No station between the old start and `i` can be a valid start either, because each would arrive at `i` with even less fuel."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p5",
+        "title": "Timed set: heaps, intervals, and greedy",
+        "problems": 4,
+        "minutes": 60,
+        "body": "Four unseen problems: one heap, one interval, and two greedy. You pass with 3 of 4 within 60 minutes, and you must be able to explain why each greedy choice is safe."
+      }
+    },
+    {
+      "id": "dp6",
+      "index": 6,
+      "title": "Recursion and Backtracking",
+      "summary": "Break problems into smaller copies of themselves, then explore choice trees systematically and prune early.",
+      "topics": [
+        {
+          "id": "t20-recursion",
+          "phaseId": "dp6",
+          "index": 20,
+          "title": "Recursion and divide and conquer",
+          "days": 3,
+          "tags": [
+            "recursion",
+            "divide-and-conquer"
+          ],
+          "pattern": "Write the base case, then assume the recursive call works on a smaller input. Divide and conquer splits the input, solves the halves, and combines them:\n\n```go\nfunc myPow(x float64, n int) float64 {\n    if n < 0 {\n        return 1 / myPow(x, -n)\n    }\n    if n == 0 {\n        return 1\n    }\n    half := myPow(x, n/2) // O(log n)\n    if n%2 == 0 {\n        return half * half\n    }\n    return half * half * x\n}\n```\n\nMerge sort is the classic example: split, sort both halves, then merge in O(n), giving O(n log n) overall. Counting inversions is merge sort with a counter added.",
+          "problems": [
+            {
+              "slug": "fibonacci-number",
+              "title": "Fibonacci Number",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "powx-n",
+              "title": "Pow(x, n)",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "sort-list",
+              "title": "Sort List",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "k-th-symbol-in-grammar",
+              "title": "K-th Symbol in Grammar",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "different-ways-to-add-parentheses",
+              "title": "Different Ways to Add Parentheses",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximum-binary-tree",
+              "title": "Maximum Binary Tree",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "search-a-2d-matrix-ii",
+              "title": "Search a 2D Matrix II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "count-of-smaller-numbers-after-self",
+              "title": "Count of Smaller Numbers After Self",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t20-recursion.c1",
+              "q": "What are the two parts of every recursive function?",
+              "a": "A base case that stops it, and a recursive case that makes the input strictly smaller."
+            },
+            {
+              "id": "t20-recursion.c2",
+              "q": "Why is fast exponentiation O(log n)?",
+              "a": "Each call halves `n` and reuses one result (`half * half`) instead of recursing twice."
+            },
+            {
+              "id": "t20-recursion.c3",
+              "q": "What's the recurrence for merge sort, and what does it solve to?",
+              "a": "T(n) = 2T(n/2) + O(n), which is O(n log n)."
+            }
+          ]
+        },
+        {
+          "id": "t21-subsets",
+          "phaseId": "dp6",
+          "index": 21,
+          "title": "Subsets, permutations, and combinations",
+          "days": 4,
+          "tags": [
+            "backtracking"
+          ],
+          "pattern": "Backtracking is choose → explore → un-choose:\n\n```go\nfunc subsets(nums []int) [][]int {\n    var res [][]int\n    var cur []int\n    var dfs func(i int)\n    dfs = func(i int) {\n        if i == len(nums) {\n            res = append(res, slices.Clone(cur)) // copy! cur keeps changing\n            return\n        }\n        cur = append(cur, nums[i]) // choose\n        dfs(i + 1)\n        cur = cur[:len(cur)-1] // un-choose\n        dfs(i + 1)             // skip\n    }\n    dfs(0)\n    return res\n}\n```\n\n**Go gotcha:** appending `cur` without cloning it stores a slice that shares the backing array, so later changes corrupt your results. With duplicate inputs, sort first and skip `nums[i] == nums[i-1]` at the same depth.",
+          "problems": [
+            {
+              "slug": "subsets",
+              "title": "Subsets",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "subsets-ii",
+              "title": "Subsets II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "permutations",
+              "title": "Permutations",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "permutations-ii",
+              "title": "Permutations II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "combinations",
+              "title": "Combinations",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "combination-sum",
+              "title": "Combination Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "combination-sum-ii",
+              "title": "Combination Sum II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "letter-combinations-of-a-phone-number",
+              "title": "Letter Combinations of a Phone Number",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "palindrome-partitioning",
+              "title": "Palindrome Partitioning",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t21-subsets.c1",
+              "q": "Why must you `slices.Clone(cur)` before saving a backtracking result in Go?",
+              "a": "`cur` shares its backing array with every saved slice, so later appends and truncations overwrite the \"saved\" results."
+            },
+            {
+              "id": "t21-subsets.c2",
+              "q": "How do you avoid duplicate subsets when the input has duplicates?",
+              "a": "Sort the input, and at each depth skip `nums[i]` if `i > start && nums[i] == nums[i-1]`."
+            },
+            {
+              "id": "t21-subsets.c3",
+              "q": "How many subsets and permutations does a set of n items have?",
+              "a": "2ⁿ subsets and n! permutations. That's why these problems have small input limits."
+            }
+          ]
+        },
+        {
+          "id": "t22-constraint",
+          "phaseId": "dp6",
+          "index": 22,
+          "title": "Constraint and grid backtracking",
+          "days": 3,
+          "tags": [
+            "backtracking",
+            "matrix"
+          ],
+          "pattern": "Prune as early as possible: check the constraints *before* recursing. On grids, mark a cell as visited in place and restore it afterwards:\n\n```go\nfunc exist(board [][]byte, word string) bool {\n    var dfs func(r, c, i int) bool\n    dfs = func(r, c, i int) bool {\n        if i == len(word) {\n            return true\n        }\n        if r < 0 || c < 0 || r >= len(board) || c >= len(board[0]) || board[r][c] != word[i] {\n            return false\n        }\n        tmp := board[r][c]\n        board[r][c] = '#' // mark visited\n        found := dfs(r+1, c, i+1) || dfs(r-1, c, i+1) || dfs(r, c+1, i+1) || dfs(r, c-1, i+1)\n        board[r][c] = tmp // restore\n        return found\n    }\n    for r := range board {\n        for c := range board[0] {\n            if dfs(r, c, 0) {\n                return true\n            }\n        }\n    }\n    return false\n}\n```\n\nFor N-Queens, track used columns and both diagonals (`r+c` and `r-c`) in sets, so each check is O(1).",
+          "problems": [
+            {
+              "slug": "word-search",
+              "title": "Word Search",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "restore-ip-addresses",
+              "title": "Restore IP Addresses",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "matchsticks-to-square",
+              "title": "Matchsticks to Square",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "partition-to-k-equal-sum-subsets",
+              "title": "Partition to K Equal Sum Subsets",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "n-queens",
+              "title": "N-Queens",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "n-queens-ii",
+              "title": "N-Queens II",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "sudoku-solver",
+              "title": "Sudoku Solver",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t22-constraint.c1",
+              "q": "How do you mark a grid cell as visited without a separate visited array?",
+              "a": "Overwrite it with a sentinel before recursing and restore the original value afterwards."
+            },
+            {
+              "id": "t22-constraint.c2",
+              "q": "How does N-Queens check diagonals in O(1)?",
+              "a": "Cells on the same \"\\\" diagonal share `r - c`, and cells on the same \"/\" diagonal share `r + c`. Keep a set for each."
+            },
+            {
+              "id": "t22-constraint.c3",
+              "q": "What's the single most important backtracking optimization?",
+              "a": "Prune early: reject a partial choice as soon as it can't lead to a valid solution, before recursing."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p6",
+        "title": "Timed set: backtracking",
+        "problems": 4,
+        "minutes": 75,
+        "body": "Four unseen backtracking or recursion problems (one may be hard). You pass with 3 of 4 within 75 minutes."
+      }
+    },
+    {
+      "id": "dp7",
+      "index": 7,
+      "title": "Graphs",
+      "summary": "Model the problem as nodes and edges, then traverse it, order it, connect it, or find shortest paths through it.",
+      "topics": [
+        {
+          "id": "t23-graph-traversal",
+          "phaseId": "dp7",
+          "index": 23,
+          "title": "Graph and grid traversal",
+          "days": 3,
+          "tags": [
+            "graph",
+            "depth-first-search",
+            "breadth-first-search"
+          ],
+          "pattern": "Build an adjacency list, keep a `visited` set, and run DFS or BFS from every unvisited node to count components. A grid is a graph whose edges are the four neighbors of each cell:\n\n```go\nfunc numIslands(grid [][]byte) int {\n    var sink func(r, c int)\n    sink = func(r, c int) {\n        if r < 0 || c < 0 || r >= len(grid) || c >= len(grid[0]) || grid[r][c] != '1' {\n            return\n        }\n        grid[r][c] = '0' // visited\n        sink(r+1, c); sink(r-1, c); sink(r, c+1); sink(r, c-1)\n    }\n    count := 0\n    for r := range grid {\n        for c := range grid[0] {\n            if grid[r][c] == '1' {\n                count++\n                sink(r, c)\n            }\n        }\n    }\n    return count\n}\n```\n\n**Multi-source BFS** (Rotting Oranges) starts with every source in the queue at distance 0. \"Reverse\" thinking helps too: Pacific Atlantic flows inward from the oceans.",
+          "problems": [
+            {
+              "slug": "flood-fill",
+              "title": "Flood Fill",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "find-if-path-exists-in-graph",
+              "title": "Find if Path Exists in Graph",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "number-of-islands",
+              "title": "Number of Islands",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "max-area-of-island",
+              "title": "Max Area of Island",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "clone-graph",
+              "title": "Clone Graph",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "rotting-oranges",
+              "title": "Rotting Oranges",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "pacific-atlantic-water-flow",
+              "title": "Pacific Atlantic Water Flow",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "surrounded-regions",
+              "title": "Surrounded Regions",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t23-graph-traversal.c1",
+              "q": "How do you count connected components?",
+              "a": "Loop over all nodes. For each unvisited one, increment the count and DFS or BFS to mark its whole component as visited."
+            },
+            {
+              "id": "t23-graph-traversal.c2",
+              "q": "What is multi-source BFS?",
+              "a": "Start the queue with all sources at distance 0. BFS then gives each cell its distance to the *nearest* source in a single pass."
+            },
+            {
+              "id": "t23-graph-traversal.c3",
+              "q": "DFS recursion depth on a 1000×1000 grid: is it a problem in Go?",
+              "a": "Usually not. Goroutine stacks grow dynamically (up to 1 GB by default), unlike fixed-stack languages. Iterative BFS is still safer for huge inputs."
+            }
+          ]
+        },
+        {
+          "id": "t24-topo-sort",
+          "phaseId": "dp7",
+          "index": 24,
+          "title": "Topological sort",
+          "days": 2,
+          "tags": [
+            "topological-sort"
+          ],
+          "pattern": "Kahn's algorithm: repeatedly take the nodes with in-degree 0. If some nodes never reach 0, there's a cycle.\n\n```go\nfunc canFinish(n int, prereq [][]int) bool {\n    adj := make([][]int, n)\n    indeg := make([]int, n)\n    for _, p := range prereq {\n        adj[p[1]] = append(adj[p[1]], p[0])\n        indeg[p[0]]++\n    }\n    var q []int\n    for i, d := range indeg {\n        if d == 0 { q = append(q, i) }\n    }\n    done := 0\n    for len(q) > 0 {\n        u := q[0]; q = q[1:]\n        done++\n        for _, v := range adj[u] {\n            if indeg[v]--; indeg[v] == 0 { q = append(q, v) }\n        }\n    }\n    return done == n\n}\n```\n\nSignals: prerequisites, build order, dependency resolution, \"is there a valid order?\"",
+          "problems": [
+            {
+              "slug": "course-schedule",
+              "title": "Course Schedule",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "course-schedule-ii",
+              "title": "Course Schedule II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-eventual-safe-states",
+              "title": "Find Eventual Safe States",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-height-trees",
+              "title": "Minimum Height Trees",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "parallel-courses-iii",
+              "title": "Parallel Courses III",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "longest-increasing-path-in-a-matrix",
+              "title": "Longest Increasing Path in a Matrix",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t24-topo-sort.c1",
+              "q": "How does Kahn's algorithm detect a cycle?",
+              "a": "If fewer than n nodes are processed (some never reach in-degree 0), the remaining nodes form or depend on a cycle."
+            },
+            {
+              "id": "t24-topo-sort.c2",
+              "q": "What's the alternative DFS approach to topological sort?",
+              "a": "Post-order DFS with three colors (unvisited, visiting, done), then reverse the post-order. Reaching a \"visiting\" node means there's a cycle."
+            },
+            {
+              "id": "t24-topo-sort.c3",
+              "q": "Which real problem is topological sort?",
+              "a": "Dependency ordering: build systems, course prerequisites, package installs (like `go mod` resolving the module graph)."
+            }
+          ]
+        },
+        {
+          "id": "t25-union-find",
+          "phaseId": "dp7",
+          "index": 25,
+          "title": "Union-find",
+          "days": 2,
+          "tags": [
+            "union-find"
+          ],
+          "pattern": "Union-find (disjoint set) answers \"are these connected?\" while you add edges, in near-constant amortized time:\n\n```go\ntype DSU struct{ parent, size []int }\n\nfunc NewDSU(n int) *DSU {\n    d := &DSU{make([]int, n), make([]int, n)}\n    for i := range n { d.parent[i], d.size[i] = i, 1 }\n    return d\n}\nfunc (d *DSU) Find(x int) int {\n    for d.parent[x] != x {\n        d.parent[x] = d.parent[d.parent[x]] // path halving\n        x = d.parent[x]\n    }\n    return x\n}\nfunc (d *DSU) Union(a, b int) bool {\n    a, b = d.Find(a), d.Find(b)\n    if a == b { return false } // already connected: this edge closes a cycle\n    if d.size[a] < d.size[b] { a, b = b, a }\n    d.parent[b] = a\n    d.size[a] += d.size[b]\n    return true\n}\n```",
+          "problems": [
+            {
+              "slug": "redundant-connection",
+              "title": "Redundant Connection",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "number-of-provinces",
+              "title": "Number of Provinces",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "accounts-merge",
+              "title": "Accounts Merge",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "satisfiability-of-equality-equations",
+              "title": "Satisfiability of Equality Equations",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "most-stones-removed-with-same-row-or-column",
+              "title": "Most Stones Removed with Same Row or Column",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "number-of-operations-to-make-network-connected",
+              "title": "Number of Operations to Make Network Connected",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t25-union-find.c1",
+              "q": "What two optimizations make union-find nearly O(1)?",
+              "a": "Path compression (or halving) in Find, and union by size or rank. Together they give O(α(n)), the inverse Ackermann function."
+            },
+            {
+              "id": "t25-union-find.c2",
+              "q": "How does union-find detect a redundant edge?",
+              "a": "`Union(a, b)` returns false when a and b already share a root, so adding that edge would close a cycle."
+            },
+            {
+              "id": "t25-union-find.c3",
+              "q": "Union-find or BFS for connected components?",
+              "a": "Both work for a static graph. Union-find shines when edges arrive incrementally and you need connectivity answers along the way."
+            }
+          ]
+        },
+        {
+          "id": "t26-shortest-paths",
+          "phaseId": "dp7",
+          "index": 26,
+          "title": "Shortest paths and spanning trees",
+          "days": 3,
+          "tags": [
+            "shortest-path",
+            "graph"
+          ],
+          "pattern": "- Unweighted graph: BFS.\n- Non-negative weights: **Dijkstra** with a min-heap.\n- \"At most k edges\": Bellman-Ford limited to k rounds.\n- Minimum spanning tree: Prim's (heap) or Kruskal's (sort edges + union-find).\n\n```go\ntype item struct{ node, dist int }\ntype pq []item\nfunc (h pq) Len() int            { return len(h) }\nfunc (h pq) Less(i, j int) bool  { return h[i].dist < h[j].dist }\nfunc (h pq) Swap(i, j int)       { h[i], h[j] = h[j], h[i] }\nfunc (h *pq) Push(x any)         { *h = append(*h, x.(item)) }\nfunc (h *pq) Pop() any           { o := *h; x := o[len(o)-1]; *h = o[:len(o)-1]; return x }\n\nfunc dijkstra(adj [][]item, src int) []int {\n    dist := make([]int, len(adj))\n    for i := range dist { dist[i] = math.MaxInt }\n    dist[src] = 0\n    h := &pq{{src, 0}}\n    for h.Len() > 0 {\n        cur := heap.Pop(h).(item)\n        if cur.dist > dist[cur.node] { continue } // stale entry\n        for _, e := range adj[cur.node] {\n            if nd := cur.dist + e.dist; nd < dist[e.node] {\n                dist[e.node] = nd\n                heap.Push(h, item{e.node, nd})\n            }\n        }\n    }\n    return dist\n}\n```",
+          "problems": [
+            {
+              "slug": "network-delay-time",
+              "title": "Network Delay Time",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "path-with-minimum-effort",
+              "title": "Path With Minimum Effort",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "cheapest-flights-within-k-stops",
+              "title": "Cheapest Flights Within K Stops",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "shortest-path-in-binary-matrix",
+              "title": "Shortest Path in Binary Matrix",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "min-cost-to-connect-all-points",
+              "title": "Min Cost to Connect All Points",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "swim-in-rising-water",
+              "title": "Swim in Rising Water",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "word-ladder",
+              "title": "Word Ladder",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "reconstruct-itinerary",
+              "title": "Reconstruct Itinerary",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t26-shortest-paths.c1",
+              "q": "Why does Dijkstra fail with negative edge weights?",
+              "a": "It finalizes a node when it's popped, assuming no later path can be shorter. A negative edge can break that assumption."
+            },
+            {
+              "id": "t26-shortest-paths.c2",
+              "q": "Why skip heap entries where `cur.dist > dist[node]`?",
+              "a": "They're stale: a shorter path was found after they were pushed. This \"lazy deletion\" replaces a decrease-key operation."
+            },
+            {
+              "id": "t26-shortest-paths.c3",
+              "q": "Prim's vs Kruskal's for a minimum spanning tree?",
+              "a": "Prim's grows one tree using a heap (good for dense graphs). Kruskal's sorts all edges and adds them with union-find (good for sparse graphs)."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p7",
+        "title": "Timed set: graphs",
+        "problems": 4,
+        "minutes": 75,
+        "body": "Four unseen graph problems: traversal, topological sort or union-find, and shortest path. You pass with 3 of 4 within 75 minutes."
+      }
+    },
+    {
+      "id": "dp8",
+      "index": 8,
+      "title": "Dynamic Programming I",
+      "summary": "Define the state, find the recurrence, choose the order. 1-D DP, knapsack, and sequence alignment.",
+      "topics": [
+        {
+          "id": "t27-dp-1d",
+          "phaseId": "dp8",
+          "index": 27,
+          "title": "1-D dynamic programming",
+          "days": 4,
+          "tags": [
+            "dynamic-programming"
+          ],
+          "pattern": "Four questions:\n1. **State:** what does `dp[i]` mean?\n2. **Transition:** how is it built from smaller states?\n3. **Base cases.**\n4. **Order:** compute states before they're needed.\n\nWrite the top-down memoized version first if that helps, then convert it to bottom-up.\n\n```go\nfunc rob(nums []int) int {\n    prev, cur := 0, 0 // dp[i-2], dp[i-1]\n    for _, n := range nums {\n        prev, cur = cur, max(cur, prev+n) // skip i, or take i + dp[i-2]\n    }\n    return cur\n}\n```\n\nWhen `dp[i]` depends only on the last few states, keep rolling variables instead of an array, for O(1) space.",
+          "problems": [
+            {
+              "slug": "climbing-stairs",
+              "title": "Climbing Stairs",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "min-cost-climbing-stairs",
+              "title": "Min Cost Climbing Stairs",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "pascals-triangle",
+              "title": "Pascal's Triangle",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "house-robber",
+              "title": "House Robber",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "house-robber-ii",
+              "title": "House Robber II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "delete-and-earn",
+              "title": "Delete and Earn",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "decode-ways",
+              "title": "Decode Ways",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximum-product-subarray",
+              "title": "Maximum Product Subarray",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "word-break",
+              "title": "Word Break",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "longest-palindromic-substring",
+              "title": "Longest Palindromic Substring",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "palindromic-substrings",
+              "title": "Palindromic Substrings",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t27-dp-1d.c1",
+              "q": "What are the four steps of designing a DP?",
+              "a": "Define the state, write the transition, set the base cases, and pick an evaluation order where dependencies are computed first."
+            },
+            {
+              "id": "t27-dp-1d.c2",
+              "q": "How does House Robber II (circular) reduce to House Robber?",
+              "a": "Run the linear version twice, once excluding the first house and once excluding the last, and take the maximum."
+            },
+            {
+              "id": "t27-dp-1d.c3",
+              "q": "Why does Maximum Product Subarray track both a max and a min?",
+              "a": "A negative number turns the smallest product into the largest, so you need both extremes at every step."
+            }
+          ]
+        },
+        {
+          "id": "t28-knapsack",
+          "phaseId": "dp8",
+          "index": 28,
+          "title": "Knapsack and coin change",
+          "days": 3,
+          "tags": [
+            "dynamic-programming"
+          ],
+          "pattern": "**0/1 knapsack** (each item used at most once): loop capacity **downwards**, so an item isn't reused within the same pass. **Unbounded** (items reusable): loop capacity **upwards**.\n\n```go\nfunc coinChange(coins []int, amount int) int {\n    dp := make([]int, amount+1) // dp[a] = fewest coins for amount a\n    for a := 1; a <= amount; a++ {\n        dp[a] = math.MaxInt32\n        for _, c := range coins {\n            if c <= a && dp[a-c]+1 < dp[a] {\n                dp[a] = dp[a-c] + 1\n            }\n        }\n    }\n    if dp[amount] == math.MaxInt32 {\n        return -1\n    }\n    return dp[amount]\n}\n```\n\nTo count combinations rather than permutations (Coin Change II), loop over **coins in the outer loop**.",
+          "problems": [
+            {
+              "slug": "coin-change",
+              "title": "Coin Change",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "coin-change-ii",
+              "title": "Coin Change II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "partition-equal-subset-sum",
+              "title": "Partition Equal Subset Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "target-sum",
+              "title": "Target Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "last-stone-weight-ii",
+              "title": "Last Stone Weight II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "ones-and-zeroes",
+              "title": "Ones and Zeroes",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "perfect-squares",
+              "title": "Perfect Squares",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "combination-sum-iv",
+              "title": "Combination Sum IV",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t28-knapsack.c1",
+              "q": "In a 1-D knapsack array, why loop capacity downwards for 0/1 items?",
+              "a": "Going downwards, `dp[c-w]` still holds the previous item's row, so each item is counted at most once."
+            },
+            {
+              "id": "t28-knapsack.c2",
+              "q": "Combinations vs permutations in coin counting: what changes?",
+              "a": "Coins in the outer loop counts combinations (order ignored). Amount in the outer loop counts permutations (Combination Sum IV)."
+            },
+            {
+              "id": "t28-knapsack.c3",
+              "q": "How does Partition Equal Subset Sum become a knapsack problem?",
+              "a": "Ask whether some subset sums to `total/2`, which is a boolean 0/1 knapsack over the items."
+            }
+          ]
+        },
+        {
+          "id": "t29-sequence-dp",
+          "phaseId": "dp8",
+          "index": 29,
+          "title": "Sequence DP: LIS, LCS, and edit distance",
+          "days": 3,
+          "tags": [
+            "dynamic-programming",
+            "string"
+          ],
+          "pattern": "Two-sequence problems use `dp[i][j]` over prefixes `a[:i]` and `b[:j]`:\n\n```go\nfunc longestCommonSubsequence(a, b string) int {\n    dp := make([][]int, len(a)+1)\n    for i := range dp {\n        dp[i] = make([]int, len(b)+1)\n    }\n    for i := 1; i <= len(a); i++ {\n        for j := 1; j <= len(b); j++ {\n            if a[i-1] == b[j-1] {\n                dp[i][j] = dp[i-1][j-1] + 1\n            } else {\n                dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n            }\n        }\n    }\n    return dp[len(a)][len(b)]\n}\n```\n\nLIS in O(n log n): keep `tails[k]` = the smallest tail of an increasing subsequence of length k+1, and binary search where each number goes (`sort.SearchInts`).",
+          "problems": [
+            {
+              "slug": "is-subsequence",
+              "title": "Is Subsequence",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "longest-increasing-subsequence",
+              "title": "Longest Increasing Subsequence",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "longest-common-subsequence",
+              "title": "Longest Common Subsequence",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "uncrossed-lines",
+              "title": "Uncrossed Lines",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "edit-distance",
+              "title": "Edit Distance",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "interleaving-string",
+              "title": "Interleaving String",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "distinct-subsequences",
+              "title": "Distinct Subsequences",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "russian-doll-envelopes",
+              "title": "Russian Doll Envelopes",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t29-sequence-dp.c1",
+              "q": "What does `dp[i][j]` mean in LCS?",
+              "a": "The length of the LCS of the prefixes `a[:i]` and `b[:j]`."
+            },
+            {
+              "id": "t29-sequence-dp.c2",
+              "q": "State the edit distance recurrence.",
+              "a": "If the characters match, `dp[i][j] = dp[i-1][j-1]`. Otherwise `1 + min(insert dp[i][j-1], delete dp[i-1][j], replace dp[i-1][j-1])`."
+            },
+            {
+              "id": "t29-sequence-dp.c3",
+              "q": "How does O(n log n) LIS work?",
+              "a": "`tails[k]` stores the smallest possible tail of an increasing subsequence of length k+1. Each number replaces the first tail ≥ it (binary search), or extends the list."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p8",
+        "title": "Timed set: dynamic programming I",
+        "problems": 4,
+        "minutes": 75,
+        "body": "Four unseen DP problems. For each one, write the state and transition as a comment before you code. You pass with 3 of 4 within 75 minutes."
+      }
+    },
+    {
+      "id": "dp9",
+      "index": 9,
+      "title": "Advanced Patterns",
+      "summary": "2-D and interval DP, tries, bit tricks, and design problems that combine several structures.",
+      "topics": [
+        {
+          "id": "t30-dp-2d",
+          "phaseId": "dp9",
+          "index": 30,
+          "title": "Grid and interval DP",
+          "days": 3,
+          "tags": [
+            "dynamic-programming",
+            "memoization"
+          ],
+          "pattern": "**Grid DP:** `dp[r][c]` is built from the cell above and the cell to the left. Often a single row is enough:\n\n```go\nfunc uniquePaths(m, n int) int {\n    row := make([]int, n)\n    for c := range row {\n        row[c] = 1\n    }\n    for r := 1; r < m; r++ {\n        for c := 1; c < n; c++ {\n            row[c] += row[c-1] // above + left\n        }\n    }\n    return row[n-1]\n}\n```\n\n**Interval DP:** `dp[l][r]` combines answers for sub-intervals. Iterate by increasing length. In Burst Balloons, choose which balloon bursts *last* in `(l, r)`.\n\n**State machines:** for stock problems with cooldown, use states held / sold / rested, each updated from the previous day.",
+          "problems": [
+            {
+              "slug": "unique-paths",
+              "title": "Unique Paths",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "unique-paths-ii",
+              "title": "Unique Paths II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "minimum-path-sum",
+              "title": "Minimum Path Sum",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "triangle",
+              "title": "Triangle",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximal-square",
+              "title": "Maximal Square",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "best-time-to-buy-and-sell-stock-with-cooldown",
+              "title": "Best Time to Buy and Sell Stock with Cooldown",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "burst-balloons",
+              "title": "Burst Balloons",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "regular-expression-matching",
+              "title": "Regular Expression Matching",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t30-dp-2d.c1",
+              "q": "How do you reduce grid DP to O(n) space?",
+              "a": "Keep one row. `row[c]` still holds the value from above, and `row[c-1]` is already updated for the current row (the cell to the left)."
+            },
+            {
+              "id": "t30-dp-2d.c2",
+              "q": "In interval DP, why iterate by interval length?",
+              "a": "`dp[l][r]` depends on strictly shorter sub-intervals, so shorter lengths must be computed first."
+            },
+            {
+              "id": "t30-dp-2d.c3",
+              "q": "In Burst Balloons, why choose the balloon that bursts *last*?",
+              "a": "If `k` bursts last in `(l, r)`, its neighbors at that moment are exactly `l` and `r`, so the two sides become independent subproblems."
+            }
+          ]
+        },
+        {
+          "id": "t31-tries",
+          "phaseId": "dp9",
+          "index": 31,
+          "title": "Tries",
+          "days": 2,
+          "tags": [
+            "trie"
+          ],
+          "pattern": "A trie shares prefixes between words. Each node has up to 26 children and an end-of-word flag:\n\n```go\ntype Trie struct {\n    next [26]*Trie\n    end  bool\n}\n\nfunc (t *Trie) Insert(w string) {\n    n := t\n    for i := 0; i < len(w); i++ {\n        c := w[i] - 'a'\n        if n.next[c] == nil {\n            n.next[c] = &Trie{}\n        }\n        n = n.next[c]\n    }\n    n.end = true\n}\n\nfunc (t *Trie) StartsWith(p string) bool {\n    n := t\n    for i := 0; i < len(p); i++ {\n        if n = n.next[p[i]-'a']; n == nil {\n            return false\n        }\n    }\n    return true\n}\n```\n\nFor Word Search II, insert all the words into a trie and run a single DFS over the board, pruning as soon as the current path isn't a prefix.",
+          "problems": [
+            {
+              "slug": "implement-trie-prefix-tree",
+              "title": "Implement Trie (Prefix Tree)",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "design-add-and-search-words-data-structure",
+              "title": "Design Add and Search Words Data Structure",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "replace-words",
+              "title": "Replace Words",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "longest-word-in-dictionary",
+              "title": "Longest Word in Dictionary",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "search-suggestions-system",
+              "title": "Search Suggestions System",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximum-xor-of-two-numbers-in-an-array",
+              "title": "Maximum XOR of Two Numbers in an Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "word-search-ii",
+              "title": "Word Search II",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t31-tries.c1",
+              "q": "What's the time complexity of trie insert and search?",
+              "a": "O(L), where L is the word length, regardless of how many words are stored."
+            },
+            {
+              "id": "t31-tries.c2",
+              "q": "Why use a trie for Word Search II instead of searching each word separately?",
+              "a": "One DFS over the board checks all the words at once, and paths that aren't a prefix of any word are pruned immediately."
+            },
+            {
+              "id": "t31-tries.c3",
+              "q": "How does a binary trie solve Maximum XOR?",
+              "a": "Insert the numbers bit by bit from the highest bit. For each number, greedily walk the opposite bit whenever it exists."
+            }
+          ]
+        },
+        {
+          "id": "t32-bits-math",
+          "phaseId": "dp9",
+          "index": 32,
+          "title": "Bit manipulation and math",
+          "days": 3,
+          "tags": [
+            "bit-manipulation",
+            "math"
+          ],
+          "pattern": "Know these by heart:\n- `x & (x-1)` clears the lowest set bit.\n- `x & -x` isolates the lowest set bit.\n- `a ^ a = 0` and `a ^ 0 = a`, so XOR cancels pairs.\n- `bits.OnesCount(uint(x))` is the popcount (`math/bits`).\n\n```go\nfunc singleNumber(nums []int) int {\n    x := 0\n    for _, n := range nums {\n        x ^= n // pairs cancel, the single number remains\n    }\n    return x\n}\n```\n\nFor math problems, watch for overflow (`math.MaxInt32` limits in the problem statement), and use `big.Int` only when the problem really needs it.",
+          "problems": [
+            {
+              "slug": "single-number",
+              "title": "Single Number",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "number-of-1-bits",
+              "title": "Number of 1 Bits",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "counting-bits",
+              "title": "Counting Bits",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "reverse-bits",
+              "title": "Reverse Bits",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "missing-number",
+              "title": "Missing Number",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "power-of-two",
+              "title": "Power of Two",
+              "difficulty": "easy"
+            },
+            {
+              "slug": "single-number-ii",
+              "title": "Single Number II",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "sum-of-two-integers",
+              "title": "Sum of Two Integers",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "reverse-integer",
+              "title": "Reverse Integer",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "multiply-strings",
+              "title": "Multiply Strings",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "count-primes",
+              "title": "Count Primes",
+              "difficulty": "medium"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t32-bits-math.c1",
+              "q": "What does `x & (x-1)` do?",
+              "a": "It clears the lowest set bit. `x & (x-1) == 0` means x is a power of two (for x > 0)."
+            },
+            {
+              "id": "t32-bits-math.c2",
+              "q": "Why does XOR find the single number?",
+              "a": "XOR is associative and commutative, `a ^ a = 0`, and `a ^ 0 = a`, so every pair cancels out."
+            },
+            {
+              "id": "t32-bits-math.c3",
+              "q": "Counting Bits in O(n)?",
+              "a": "`bits[i] = bits[i>>1] + (i & 1)`. Reuse the count of `i` without its lowest bit."
+            }
+          ]
+        },
+        {
+          "id": "t33-design",
+          "phaseId": "dp9",
+          "index": 33,
+          "title": "Design problems",
+          "days": 2,
+          "tags": [
+            "design"
+          ],
+          "pattern": "Design problems combine structures so that every operation hits its complexity target. Write down each operation's required cost first, then pick structures.\n\n- **LRU cache:** hash map + doubly linked list. `container/list` provides the list.\n- **O(1) insert/delete/getRandom:** slice + value→index map. Delete by swapping with the last element.\n- **Snapshots or versions:** per-key sorted history + binary search.\n\n```go\ntype LRUCache struct {\n    cap int\n    ll  *list.List               // front = most recent\n    m   map[int]*list.Element    // key → element holding [2]int{key, val}\n}\n\nfunc (c *LRUCache) Get(k int) int {\n    if e, ok := c.m[k]; ok {\n        c.ll.MoveToFront(e)\n        return e.Value.([2]int)[1]\n    }\n    return -1\n}\n```",
+          "problems": [
+            {
+              "slug": "lru-cache",
+              "title": "LRU Cache",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "insert-delete-getrandom-o1",
+              "title": "Insert Delete GetRandom O(1)",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "design-browser-history",
+              "title": "Design Browser History",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "snapshot-array",
+              "title": "Snapshot Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "design-underground-system",
+              "title": "Design Underground System",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "stock-price-fluctuation",
+              "title": "Stock Price Fluctuation",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "lfu-cache",
+              "title": "LFU Cache",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "all-oone-data-structure",
+              "title": "All O`one Data Structure",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t33-design.c1",
+              "q": "Which two structures make an LRU cache O(1)?",
+              "a": "A hash map (key → list node) for lookup, and a doubly linked list for recency order with O(1) move-to-front and evict-from-back."
+            },
+            {
+              "id": "t33-design.c2",
+              "q": "How does Insert Delete GetRandom delete in O(1)?",
+              "a": "Swap the element with the last one in the slice, update the moved element's index in the map, then truncate the slice."
+            },
+            {
+              "id": "t33-design.c3",
+              "q": "What's the first step in any design problem?",
+              "a": "List each operation with its required time complexity, then choose structures that meet all of them together."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p9",
+        "title": "Timed set: advanced",
+        "problems": 4,
+        "minutes": 75,
+        "body": "Four unseen problems: one grid DP, one trie, one bit manipulation, and one design. You pass with 3 of 4 within 75 minutes."
+      }
+    },
+    {
+      "id": "dp10",
+      "index": 10,
+      "title": "Mixed Review and Mocks",
+      "summary": "No new patterns. Mixed, unlabeled problems train you to *recognize* the pattern, which is the skill interviews actually test.",
+      "topics": [
+        {
+          "id": "t34-mixed-1",
+          "phaseId": "dp10",
+          "index": 34,
+          "title": "Mixed review: arrays to trees",
+          "days": 5,
+          "tags": [
+            "array",
+            "string",
+            "two-pointers",
+            "stack",
+            "binary-search",
+            "tree"
+          ],
+          "pattern": "For a problem with no label, run this checklist out loud:\n\n1. **Restate** the problem and work through two examples by hand, including an edge case.\n2. **Brute force** first, and state its complexity. Check the input size to see what's acceptable. n ≤ 10⁵ needs O(n log n) or better.\n3. **Match signals to patterns:**\n\n| Signal | Try |\n|---|---|\n| pair/complement, \"seen before\" | hash map |\n| sorted input, pair sums | two pointers |\n| contiguous subarray/substring + condition | sliding window |\n| range sums | prefix sums |\n| next greater/smaller | monotonic stack |\n| sorted + \"find\", or monotone feasibility | binary search |\n| k largest / streaming best | heap |\n| all combinations | backtracking |\n| dependencies | topological sort |\n| optimal over choices with overlap | DP |\n\n4. **Code** it in Go, then **test** the edge cases: empty input, a single element, duplicates, negatives.",
+          "problems": [
+            {
+              "slug": "rotate-array",
+              "title": "Rotate Array",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "find-all-anagrams-in-a-string",
+              "title": "Find All Anagrams in a String",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "asteroid-collision",
+              "title": "Asteroid Collision",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "car-pooling",
+              "title": "Car Pooling",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "the-number-of-weak-characters-in-the-game",
+              "title": "The Number of Weak Characters in the Game",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "first-missing-positive",
+              "title": "First Missing Positive",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "sliding-window-median",
+              "title": "Sliding Window Median",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t34-mixed-1.c1",
+              "q": "What input size usually rules out O(n²)?",
+              "a": "n around 10⁵ or more. Aim for O(n log n) or O(n)."
+            },
+            {
+              "id": "t34-mixed-1.c2",
+              "q": "What's the first thing to do with an unfamiliar problem?",
+              "a": "Restate it and work through small examples by hand, including an edge case, before you choose an approach."
+            },
+            {
+              "id": "t34-mixed-1.c3",
+              "q": "Name three signals for a sliding window.",
+              "a": "The answer is contiguous, there's a condition that can be updated incrementally as the window changes, and the question asks for the longest, shortest, or a count."
+            }
+          ]
+        },
+        {
+          "id": "t35-mixed-2",
+          "phaseId": "dp10",
+          "index": 35,
+          "title": "Mixed review: graphs to DP",
+          "days": 5,
+          "tags": [
+            "graph",
+            "dynamic-programming",
+            "greedy",
+            "heap-priority-queue",
+            "backtracking"
+          ],
+          "pattern": "The last stretch should feel like real interviews. Each day:\n- **A mock:** 2 problems in 45 minutes, no labels, talking through your approach.\n- **Redo:** problems from your redo queue (the ones that needed hints).\n- **Review:** your pattern cards.\n\nWhen stuck for 15 minutes, read only the *first hint* or the pattern name, then try again. Log it honestly as \"solved with hint\", and it will come back in your redo queue.",
+          "problems": [
+            {
+              "slug": "jump-game-vii",
+              "title": "Jump Game VII",
+              "difficulty": "medium"
+            },
+            {
+              "slug": "maximal-rectangle",
+              "title": "Maximal Rectangle",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "trapping-rain-water-ii",
+              "title": "Trapping Rain Water II",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "critical-connections-in-a-network",
+              "title": "Critical Connections in a Network",
+              "difficulty": "hard"
+            },
+            {
+              "slug": "minimum-cost-to-cut-a-stick",
+              "title": "Minimum Cost to Cut a Stick",
+              "difficulty": "hard"
+            }
+          ],
+          "cards": [
+            {
+              "id": "t35-mixed-2.c1",
+              "q": "How long should you stay stuck before taking a hint?",
+              "a": "About 15 minutes of real effort. Then take the smallest hint (just the pattern name) and try again. Log it as a hint so it gets scheduled for a redo."
+            },
+            {
+              "id": "t35-mixed-2.c2",
+              "q": "Why redo problems you needed hints for?",
+              "a": "Re-solving without help a few days later is retrieval practice. It turns \"I recognized the answer\" into \"I can produce it\"."
+            },
+            {
+              "id": "t35-mixed-2.c3",
+              "q": "How does Maximal Rectangle reduce to an earlier problem?",
+              "a": "Build a histogram of heights row by row and run Largest Rectangle in Histogram (monotonic stack) on each row."
+            }
+          ]
+        }
+      ],
+      "boss": {
+        "id": "dboss-p10",
+        "title": "Final mock",
+        "problems": 4,
+        "minutes": 90,
+        "body": "The final Gate Trial: four unseen, unlabeled problems (at least one hard), in Go, talking through your approach as you go. You pass with 3 of 4 within 90 minutes."
+      }
+    }
+  ]
+}

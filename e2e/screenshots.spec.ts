@@ -61,6 +61,11 @@ test("desktop screenshots", async ({ page }) => {
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${out}/review.png` });
 
+  await page.goto("/dsa/");
+  await settle(page);
+  await page.screenshot({ path: `${out}/dsa.png` });
+  await page.screenshot({ path: `${out}/dsa-full.png`, fullPage: true });
+
   await page.goto("/profile/");
   await settle(page);
   await page.screenshot({ path: `${out}/profile.png` });

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import { COLLECTIONS, type CollectionName, type GameState } from "@/engine/state";
+import { COLLECTIONS, normalizeState, type CollectionName, type GameState } from "@/engine/state";
 import type { ChangeSet, StorageAdapter } from "./adapter";
 
 // IndexedDB via Dexie. One table per collection plus a `meta` table for the player and settings.
@@ -24,6 +24,8 @@ class GoStepsDB extends Dexie {
       attempts: "id, taskId",
       achievements: "id",
     });
+    // v2: the DSA track's problem log. Existing data is kept; Dexie only adds the table.
+    this.version(2).stores({ problems: "id, day, slug, topicId" });
   }
   col(name: CollectionName): Table<Row, string> {
     return this.table(name);
@@ -47,7 +49,7 @@ export class LocalAdapter implements StorageAdapter {
       const rows = await this.db.col(c).toArray();
       (state as unknown as Record<string, unknown>)[c] = Object.fromEntries(rows.map((r) => [r.id, r]));
     }
-    return state;
+    return normalizeState(state);
   }
 
   async apply(cs: ChangeSet): Promise<void> {

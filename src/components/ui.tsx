@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 import { retrievability } from "@/engine/game";
 import { levelProgress, rankDef } from "@/engine/rules";
 import type { GameState } from "@/engine/state";
-import { idx } from "@/lib/course";
+import { stats } from "@/lib/course";
 
 export function Markdown({ children }: { children: string }) {
   return (
@@ -88,7 +88,7 @@ export function sharpness(state: GameState, statId: string, now: Date): number |
 export function StatList({ state, now }: { state: GameState; now: Date }) {
   return (
     <div className="stack" style={{ gap: 10 }}>
-      {idx.course.stats.map((s) => {
+      {stats.map((s) => {
         const sh = sharpness(state, s.id, now);
         const c = sh === null ? "var(--muted)" : sh < 75 ? "var(--warn)" : "var(--good)";
         return (

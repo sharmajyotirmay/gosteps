@@ -9,6 +9,7 @@ import { SEVERITIES, STASIS_MAX_DAYS, type Severity, type Verify } from "@/engin
 import { initialState, type Settings, type Theme } from "@/engine/state";
 import { makeBundle, readBundle } from "@/storage/adapter";
 import { course } from "@/lib/course";
+import { startDsa } from "@/engine/dsa";
 
 export default function SettingsPage() {
   const { state, act, replace, toast } = useGame();
@@ -17,6 +18,7 @@ export default function SettingsPage() {
   const toggleMethod = (m: MethodId) => set({ methods: s.methods.includes(m) ? s.methods.filter((x) => x !== m) : [...s.methods, m] });
   const [stasisDays, setStasisDays] = useState(7);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDsaReset, setConfirmDsaReset] = useState(false);
   const [importMsg, setImportMsg] = useState("");
 
   const exportJson = () => {
@@ -148,6 +150,33 @@ export default function SettingsPage() {
             </label>
             <label className="check"><input type="checkbox" checked={s.sound} onChange={(e) => set({ sound: e.target.checked })} /> System chime</label>
             <label className="check"><input type="checkbox" checked={s.quietMode} onChange={(e) => set({ quietMode: e.target.checked })} /> Quiet mode: don&apos;t pop the System window open automatically</label>
+          </div>
+        </Panel>
+
+        <Panel title="DSA track">
+          <div className="stack">
+            <label className="check"><input type="checkbox" checked={s.dsa.enabled} onChange={(e) => set({ dsa: { ...s.dsa, enabled: e.target.checked } })} /> Run the DSA track alongside the Go course</label>
+            {s.dsa.start ? (
+              <p className="small" style={{ margin: 0 }}>Started {s.dsa.start}: {s.dsa.goal} problems in {s.dsa.days} days.</p>
+            ) : (
+              <p className="small muted" style={{ margin: 0 }}>Not started yet. Start it from the DSA page.</p>
+            )}
+            <div className="row">
+              <label className="field" style={{ width: 130 }}>Goal
+                <input type="number" id="dsa-goal-setting" min={50} max={5000} value={s.dsa.goal} onChange={(e) => set({ dsa: { ...s.dsa, goal: Number(e.target.value) || 1000 } })} />
+              </label>
+              <label className="field" style={{ width: 130 }}>Days
+                <input type="number" id="dsa-days-setting" min={10} max={365} value={s.dsa.days} onChange={(e) => set({ dsa: { ...s.dsa, days: Number(e.target.value) || 100 } })} />
+              </label>
+            </div>
+            {s.dsa.start && !confirmDsaReset && <div><button type="button" className="btn sm ghost" onClick={() => setConfirmDsaReset(true)}>Restart from day 1…</button></div>}
+            {confirmDsaReset && (
+              <div className="row">
+                <span className="small">Day 1 becomes today. Problems you&apos;ve already solved still count.</span>
+                <button type="button" className="btn sm" onClick={() => { act((d, c) => startDsa(d, c)); setConfirmDsaReset(false); }}>Restart today</button>
+                <button type="button" className="btn sm ghost" onClick={() => setConfirmDsaReset(false)}>Cancel</button>
+              </div>
+            )}
           </div>
         </Panel>
 

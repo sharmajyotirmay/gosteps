@@ -49,6 +49,36 @@ export interface Settings {
   sound: boolean;
   theme: Theme;
   intention: string;
+  dsa: DsaSettings;
+}
+
+export interface DsaSettings {
+  enabled: boolean;
+  /** Plan day 1. Null until the challenge is started. */
+  start: DayKey | null;
+  goal: number;
+  days: number;
+}
+
+export type ProblemOutcome = "solved" | "hint" | "failed";
+
+/** One logged DSA attempt. Unique solved slugs count toward the goal. */
+export interface SolvedProblem {
+  id: string;
+  slug: string;
+  title: string;
+  url: string;
+  difficulty: "easy" | "medium" | "hard";
+  topicId: string;
+  outcome: ProblemOutcome;
+  inGo: boolean;
+  minutes: number | null;
+  at: string;
+  day: DayKey;
+  xp: number;
+  /** Set for hint/failed attempts: when to re-solve without help. */
+  redoAt: string | null;
+  redoneAt: string | null;
 }
 
 export interface Progress {
@@ -94,7 +124,7 @@ export interface ReviewLog {
   rating: 1 | 2 | 3 | 4;
 }
 
-export type OrderKind = "review" | "concept" | "build" | "reflect";
+export type OrderKind = "review" | "concept" | "build" | "reflect" | "dsa";
 
 export interface OrderItem {
   id: string;
@@ -203,6 +233,7 @@ export interface GameState {
   sessions: Record<string, FocusSession>;
   attempts: Record<string, Attempt>;
   achievements: Record<string, AchievementRec>;
+  problems: Record<string, SolvedProblem>;
 }
 
 export const COLLECTIONS = [
@@ -217,6 +248,7 @@ export const COLLECTIONS = [
   "sessions",
   "attempts",
   "achievements",
+  "problems",
 ] as const;
 export type CollectionName = (typeof COLLECTIONS)[number];
 
@@ -261,6 +293,7 @@ export function initialState(courseId: string, now: Date): GameState {
       sound: true,
       theme: "dark",
       intention: "",
+      dsa: { ...DEFAULT_DSA },
     },
     progress: {},
     cards: {},
@@ -273,5 +306,18 @@ export function initialState(courseId: string, now: Date): GameState {
     sessions: {},
     attempts: {},
     achievements: {},
+    problems: {},
   };
+}
+
+export const DEFAULT_DSA: DsaSettings = { enabled: true, start: null, goal: 1000, days: 100 };
+
+/** Fill fields added after a save was written (older IndexedDB data or backups). */
+export function normalizeState(s: GameState): GameState {
+  const settings = s.settings.dsa ? s.settings : { ...s.settings, dsa: { ...DEFAULT_DSA } };
+  const missing = COLLECTIONS.filter((c) => !s[c]);
+  if (settings === s.settings && missing.length === 0) return s;
+  const next = { ...s, settings } as GameState;
+  for (const c of missing) (next as unknown as Record<string, unknown>)[c] = {};
+  return next;
 }

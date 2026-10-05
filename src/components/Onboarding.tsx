@@ -4,7 +4,8 @@ import { useState } from "react";
 import { onboard } from "@/engine/game";
 import { BALANCED_PRESET, METHOD_IDS, METHODS, type MethodId } from "@/engine/methods";
 import { SEVERITIES, type Severity } from "@/engine/rules";
-import { course } from "@/lib/course";
+import { course, dsaTrack } from "@/lib/course";
+import { startDsa } from "@/engine/dsa";
 import { useGame } from "./GameProvider";
 import { Panel } from "./ui";
 
@@ -20,7 +21,13 @@ export function Onboarding() {
   const [severity, setSeverity] = useState<Severity>("standard");
 
   const toggle = (m: MethodId) => setMethods((ms) => (ms.includes(m) ? ms.filter((x) => x !== m) : [...ms, m]));
-  const finish = () => act((d, c) => onboard(d, c, { name, methods, severity, intention, dayBoundaryHour: boundary }));
+  const [withDsa, setWithDsa] = useState(true);
+  const finish = () =>
+    act((d, c) => {
+      onboard(d, c, { name, methods, severity, intention, dayBoundaryHour: boundary });
+      if (withDsa) startDsa(d, c);
+      else d.settings.dsa.enabled = false;
+    });
 
   return (
     <div className="stack" style={{ maxWidth: 780, margin: "0 auto", width: "100%" }}>
@@ -64,7 +71,15 @@ export function Onboarding() {
             <span className="small muted">{course.description}</span>
             <span className="small">{course.phases.length} phases · {course.phases.reduce((n, p) => n + p.quests.length, 0)} quests · every quest follows the Learning Rule: {course.learningRule.map((s) => s.name).join(" → ")}</span>
           </div>
-          <p className="small muted">You&apos;ll build the Go project on your own machine. The app tracks quests, reviews, and evidence.</p>
+          <label className={`option ${withDsa ? "on" : ""}`} style={{ marginTop: 10 }}>
+            <span className="row" style={{ justifyContent: "space-between" }}>
+              <span className="name">{dsaTrack.title}</span>
+              <input type="checkbox" checked={withDsa} onChange={(e) => setWithDsa(e.target.checked)} aria-label="Also start the DSA track" />
+            </span>
+            <span className="small muted">{dsaTrack.description}</span>
+            <span className="small">Runs alongside the Go course: every problem adds XP, the ALG stat, and progress on a DSA order in your Daily Orders. Day 1 starts today.</span>
+          </label>
+          <p className="small muted">You&apos;ll build the Go project and solve problems on your own machine. The app tracks quests, problems, reviews, and evidence.</p>
         </Panel>
       )}
 
