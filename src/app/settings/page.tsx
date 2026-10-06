@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { DiskState } from "@/components/GameProvider";
 import { useGame } from "@/components/GameProvider";
 import { Panel } from "@/components/ui";
 import { endStasis, spendRestToken, startStasis, updateSettings } from "@/engine/game";
@@ -183,9 +184,10 @@ export default function SettingsPage() {
         <Panel title="Storage">
           <div className="stack">
             <div className="option on">
-              <span className="name">Local (IndexedDB)</span>
+              <span className="name">This browser (IndexedDB)</span>
               <span className="small muted">Active. No account, no server, no telemetry.</span>
             </div>
+            <DiskPanel />
             <div className="option" aria-disabled="true" style={{ opacity: 0.55, cursor: "default" }}>
               <span className="name">Supabase · PocketBase · Postgres API</span>
               <span className="small muted">Planned (milestone M5). Use export and import to move data meanwhile.</span>
@@ -216,5 +218,51 @@ export default function SettingsPage() {
         </Panel>
       </div>
     </>
+  );
+}
+
+const DISK_LABEL: Record<DiskState["status"], string> = {
+  checking: "Checking…",
+  off: "Not running",
+  ok: "Saving",
+  saving: "Writing…",
+  error: "Error",
+  conflict: "Waiting for you",
+};
+
+function DiskPanel() {
+  const { disk } = useGame();
+  const on = disk.status !== "off" && disk.status !== "checking";
+  return (
+    <div className={`option ${on ? "on" : ""}`} style={{ cursor: "default" }}>
+      <span className="row" style={{ justifyContent: "space-between" }}>
+        <span className="name">This computer (file)</span>
+        <span className={`chip ${disk.status === "ok" || disk.status === "saving" ? "good" : disk.status === "error" || disk.status === "conflict" ? "bad" : ""}`}>{DISK_LABEL[disk.status]}</span>
+      </span>
+      {disk.status === "off" || disk.status === "checking" ? (
+        <span className="small muted">
+          Mirrors everything to a JSON file in <code>.gosteps-data/</code> (git-ignored) when the local store is running.
+          It starts automatically with <code>pnpm dev</code>, or on its own with <code>pnpm store</code>.
+          {disk.status === "off" && <> <button type="button" className="btn sm ghost" style={{ marginTop: 6 }} onClick={() => void disk.retry()}>Connect</button></>}
+        </span>
+      ) : (
+        <>
+          <span className="small" style={{ wordBreak: "break-all" }}><code>{disk.file}</code></span>
+          <span className="small muted">
+            {disk.savedAt ? `Last saved ${new Date(disk.savedAt).toLocaleString()}.` : "Not saved yet."} One backup per day is kept for 30 days in <code>backups/</code>.
+          </span>
+          {disk.error && <span className="small" style={{ color: "var(--danger)" }}>{disk.error}</span>}
+          {disk.newerOnDisk && (
+            <span className="small" style={{ color: "var(--warn)" }}>
+              The file was saved {new Date(disk.newerOnDisk).toLocaleString()}, after this browser&apos;s last change. Saving to disk is paused until you choose which copy to keep.
+            </span>
+          )}
+          <span className="row" style={{ marginTop: 4 }}>
+            <button type="button" className="btn sm" onClick={() => void disk.loadNow()}>{disk.newerOnDisk ? "Use the file" : "Load from disk"}</button>
+            <button type="button" className="btn sm ghost" onClick={() => void disk.saveNow()}>{disk.newerOnDisk ? "Keep this browser's data" : "Save now"}</button>
+          </span>
+        </>
+      )}
+    </div>
   );
 }

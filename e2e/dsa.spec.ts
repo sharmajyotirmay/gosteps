@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("DSA track: start at onboarding, log problems, see progress everywhere", async ({ page }) => {
   await page.goto("/");

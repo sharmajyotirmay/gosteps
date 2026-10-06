@@ -5,10 +5,10 @@
   "scripts": {
     "course:build": "tsx scripts/build-course.ts && tsx scripts/build-dsa.ts",
     "predev": "pnpm course:build",
-    "dev": "next dev",
+    "dev": "concurrently -k -n app,store -c blue,magenta \"next dev\" \"tsx scripts/local-store.ts\"",
     "prebuild": "pnpm course:build",
     "build": "next build",
-    "preview": "pnpm dlx serve@14 out",
+    "preview": "concurrently -k -n app,store -c blue,magenta \"pnpm dlx serve@14 out\" \"tsx scripts/local-store.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -16,7 +16,9 @@
     "format": "prettier --write .",
     "check": "pnpm course:build && pnpm typecheck && pnpm lint && pnpm test",
     "e2e": "playwright test",
-    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts"
+    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts",
+    "dev:app": "next dev",
+    "store": "tsx scripts/local-store.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",
@@ -36,6 +38,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^5.0.2",
+    "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
     "fake-indexeddb": "^6.2.5",

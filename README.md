@@ -64,14 +64,84 @@ Production build (static site in `out/`):
 
 ```sh
 pnpm build
-pnpm preview             # serves out/ on http://localhost:3000
+pnpm preview             # serves out/ on http://localhost:3000, plus the local file store
 ```
+
+## Where your data lives
+
+| Copy | Location | When |
+|---|---|---|
+| Primary | Your browser's IndexedDB | Always |
+| Mirror on disk | `.gosteps-data/state.json` in this repo | Whenever the local store is running. `pnpm dev` and `pnpm preview` start it automatically. |
+| Daily backups | `.gosteps-data/backups/state-YYYY-MM-DD.json`, last 30 kept | Same as above |
+
+**`.gosteps-data/` is git-ignored, so your progress is never committed.** Exported `gosteps-backup-*.json` files are ignored too, in case you save one inside the repo.
+
+How the mirror behaves:
+- **Saving.** Every change is written to the file about 1.5 s later (straight away when you leave the tab). Writes go to a temp file first, then get renamed, so a crash can't leave half a file.
+- **Restoring.** If this browser has no data (new browser, cleared site data, a different profile), the app restores from the file on load.
+- **Conflicts.** If the file is newer than this browser's data, saving pauses and **Settings → Storage** asks which copy to keep. Nothing is overwritten silently.
+- **Access.** The store listens on `127.0.0.1:4777` only, and answers only pages served from `localhost`.
+- **Options.** `GOSTEPS_DATA_DIR=/path/to/folder pnpm dev` keeps the data somewhere else, such as a synced folder. To use a different port, set `GOSTEPS_STORE_PORT` and `NEXT_PUBLIC_GOSTEPS_STORE` together (see step 6 below).
+
+### Save your progress locally: step by step
+
+1. **Clone and install** (Node 20+ and pnpm 10):
+   ```sh
+   git clone <this-repo-url> gosteps && cd gosteps
+   corepack enable
+   pnpm install
+   ```
+2. **Start the app and the file store together:**
+   ```sh
+   pnpm dev
+   ```
+   The terminal shows two processes, `app` and `store`. The store prints where it saves:
+   ```
+   [store] GoSteps local store: saving to /…/gosteps/.gosteps-data/state.json (http://127.0.0.1:4777)
+   ```
+3. **Open the app** at the URL `app` prints (usually http://localhost:3000) and register, or keep using your existing progress.
+4. **Check that it's saving.** Go to **Settings → Storage**. The **This computer (file)** card should say **Saving**, show the file path, and show "Last saved …". If you already had progress in this browser, the file is created the first time you start the store.
+5. **Confirm the file exists and is git-ignored:**
+   ```sh
+   ls .gosteps-data/                          # state.json  backups/
+   git check-ignore -v .gosteps-data/state.json
+   git status                                 # .gosteps-data/ must not appear
+   ```
+6. **Optional: keep the data somewhere else** (another folder, or a synced Dropbox/iCloud folder):
+   ```sh
+   GOSTEPS_DATA_DIR=~/Documents/gosteps-data pnpm dev
+   ```
+   To run the store on another port, change both the store and the app's address for it:
+   ```sh
+   GOSTEPS_STORE_PORT=4800 NEXT_PUBLIC_GOSTEPS_STORE=http://127.0.0.1:4800 pnpm dev
+   ```
+7. **Optional: production build instead of dev.** `pnpm build && pnpm preview` serves the built site and starts the same store.
+
+**Move to a new computer or browser.** Copy the `.gosteps-data/` folder into the new clone, run `pnpm dev`, and open the app. A browser with no data restores from the file automatically ("Restored your progress from …"). In a browser that already has data, use **Settings → Storage → Load from disk**.
+
+**Restore an older day.** Copy a daily backup over the main file, then load it:
+```sh
+cp .gosteps-data/backups/state-2026-10-01.json .gosteps-data/state.json
+```
+Then use **Settings → Storage → Load from disk**. Any backup can also be loaded with **Settings → Import backup**.
+
+**Troubleshooting**
+
+| You see | Fix |
+|---|---|
+| Storage card says **Not running** | Start the store with `pnpm dev` or `pnpm store`, then click **Connect**. `pnpm dev:app` runs the app without it. |
+| "port 4777 is already in use" | Another store is already running (another terminal), and the app will use that one. Or pick another port (step 6). |
+| **Waiting for you** / "file on disk is newer" | You changed data in another browser. Choose **Use the file** or **Keep this browser's data** in Settings → Storage. |
+| Nothing saved after clearing site data | The file is still there. Reload with the store running and the app restores from it. |
 
 ## Everyday commands
 
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Dev server with hot reload |
+| `pnpm dev` | Dev server with hot reload, plus the local file store (saves to `.gosteps-data/`) |
+| `pnpm dev:app` | Dev server only, with no file mirror |
+| `pnpm store` | Just the local file store, for example next to `pnpm preview` or a deployed copy you open from localhost |
 | `pnpm course:build` | Compile `curriculum/go/*.md` and `curriculum/dsa/*.md` to JSON and readable roadmaps |
 | `pnpm test` | Unit tests (engine rules, evidence parser, storage, course validation) |
 | `pnpm e2e` | Playwright end-to-end tests against the static build (run `pnpm build` first) |

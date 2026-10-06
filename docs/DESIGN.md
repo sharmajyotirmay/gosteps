@@ -295,6 +295,19 @@ interface StorageAdapter {
 
 ---
 
+### 5.1 Local file mirror (added)
+
+A tiny Node server (`scripts/local-store.ts`, no dependencies) runs with `pnpm dev` and `pnpm preview`. It's a mirror, not a replacement: IndexedDB stays primary because it's fast and works offline, and the file adds a copy on the disk you control.
+
+| Concern | Decision |
+|---|---|
+| Format | The same versioned export bundle as Settings → Export, so the file is also a valid import. |
+| Writes | Debounced 1.5 s after a change, and flushed when the tab is hidden. Temp file then rename (atomic). Writes are serialized. One daily copy in `backups/`, 30 kept. |
+| Recovery | IndexedDB empty and file present: restore automatically on load. |
+| Conflicts | File newer than this browser's last change (tracked in localStorage): pause the mirror and ask in Settings (use the file, or keep the browser's data). |
+| Security | Binds to 127.0.0.1. Rejects requests whose `Origin` isn't a localhost page (403). Body limit 50 MB. |
+| Privacy | `.gosteps-data/` is git-ignored. Tests use a throwaway store on another port with a temp folder, so they never touch real data. |
+
 ## 6. Screens and flows
 
 | Screen | Purpose / key elements |

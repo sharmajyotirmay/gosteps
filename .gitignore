@@ -44,3 +44,7 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /blob-report/
+
+# GoSteps local data: your personal progress, mirrored to disk by `pnpm store` (never commit)
+/.gosteps-data/
+gosteps-backup-*.json
