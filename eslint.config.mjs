@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Personal data and the IDE workspace are never part of the website.
+    ".gosteps-workspace/**",
+    ".gosteps-data/**",
   ]),
 ]);
 

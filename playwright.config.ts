@@ -22,5 +22,13 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 30_000,
     },
+    // Throwaway IDE runner with a temp workspace, never your real .gosteps-workspace/.
+    {
+      command: "tsx scripts/ide-server.ts",
+      url: "http://127.0.0.1:4798/health",
+      env: { GOSTEPS_IDE_PORT: "4798", GOSTEPS_WORKSPACE: join(storeDir, "workspace") },
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
   ],
 });

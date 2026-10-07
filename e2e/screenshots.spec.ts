@@ -1,5 +1,5 @@
 import { type Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect, test, TEST_IDE } from "./fixtures";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { demoBundle } from "./seed";
@@ -70,6 +70,86 @@ test("desktop screenshots", async ({ page }) => {
   await page.goto("/profile/");
   await settle(page);
   await page.screenshot({ path: `${out}/profile.png` });
+});
+
+test("IDE screenshot", async ({ page, request }) => {
+  const h = await request.get(`${TEST_IDE}/health`).then((r) => r.json()).catch(() => null);
+  test.skip(!h?.docker?.imageReady, "Docker sandbox not available");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.addInitScript((url) => localStorage.setItem("gosteps.ideUrl", url), TEST_IDE);
+  await loadDemo(page);
+  const H = { "x-gosteps": "1" };
+  await request.put(`${TEST_IDE}/file?path=jobq/internal/job/job.go`, { headers: H, data: `package job
+
+import (
+	"errors"
+	"time"
+)
+
+// Status is where a job is in its lifecycle.
+type Status int
+
+const (
+	StatusQueued Status = iota
+	StatusRunning
+	StatusSucceeded
+	StatusFailed
+)
+
+var ErrInvalidTransition = errors.New("invalid status transition")
+
+type Job struct {
+	ID        string
+	Type      string
+	Payload   []byte
+	Status    Status
+	Attempts  int
+	CreatedAt time.Time
+}
+
+// MarkRunning moves a queued job to running and counts the attempt.
+func (j *Job) MarkRunning() error {
+	if j.Status != StatusQueued {
+		return ErrInvalidTransition
+	}
+	j.Status = StatusRunning
+	j.Attempts++
+	return nil
+}
+` });
+  await request.put(`${TEST_IDE}/file?path=jobq/internal/job/job_test.go`, { headers: H, data: `package job
+
+import (
+	"errors"
+	"testing"
+)
+
+func TestMarkRunning(t *testing.T) {
+	tests := []struct {
+		name    string
+		from    Status
+		wantErr error
+	}{
+		{"queued", StatusQueued, nil},
+		{"already running", StatusRunning, ErrInvalidTransition},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j := &Job{Status: tt.from}
+			if err := j.MarkRunning(); !errors.Is(err, tt.wantErr) {
+				t.Fatalf("got %v, want %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+` });
+  await page.goto("/ide/?open=jobq%2Finternal%2Fjob%2Fjob.go");
+  await expect(page.getByLabel("Editor: jobq/internal/job/job.go")).toBeVisible();
+  await page.getByLabel("-v").check();
+  await page.getByRole("button", { name: "Test -race" }).click();
+  await expect(page.getByText(/exit 0/)).toBeVisible({ timeout: 120_000 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${out}/ide.png` });
 });
 
 test("phone screenshot", async ({ page }) => {

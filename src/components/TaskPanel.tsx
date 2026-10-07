@@ -8,6 +8,7 @@ import { has } from "@/engine/methods";
 import { pomodoroMult, taskXP, type Verify } from "@/engine/rules";
 import { idx } from "@/lib/course";
 import { useGame } from "./GameProvider";
+import { runInSandbox } from "@/ide/client";
 import { PomodoroTimer } from "./PomodoroTimer";
 import { InlineCode, Markdown } from "./ui";
 
@@ -38,6 +39,7 @@ export function TaskPanel({ task, quest }: { task: Task; quest?: Quest }) {
   const [answers, setAnswers] = useState(["", "", ""]);
   const [output, setOutput] = useState("");
   const [raceConfirmed, setRaceConfirmed] = useState(false);
+  const [sandboxBusy, setSandboxBusy] = useState(false);
   const [goleakConfirmed, setGoleakConfirmed] = useState(false);
   const [commitUrl, setCommitUrl] = useState("");
   const [honor, setHonor] = useState(false);
@@ -66,6 +68,30 @@ export function TaskPanel({ task, quest }: { task: Task; quest?: Quest }) {
     verify,
     methodMult: pomodoro ? pomodoroMult(sessions, task.sessions ?? 1) : 1,
   });
+
+  // Flags the criteria need: -race for race/leak checks, -cover for coverage, -bench for benchmarks.
+  const sandboxFlags = {
+    race: task.evidence.some((c) => c.kind === "go-test-race" || c.kind === "goleak"),
+    cover: task.evidence.some((c) => c.kind === "coverage"),
+    bench: task.evidence.some((c) => c.kind === "go-bench"),
+  };
+  const runSandboxEvidence = async () => {
+    setSandboxBusy(true);
+    setOutput("");
+    try {
+      const res = await runInSandbox(
+        { module: "jobq", action: "test", race: sandboxFlags.race, cover: sandboxFlags.cover, ...(sandboxFlags.bench ? { bench: ".", run: "." } : {}) },
+        { output: (d) => setOutput((o) => o + d) },
+      );
+      // The app ran it with -race itself, so no need to ask.
+      if (sandboxFlags.race && res.code === 0) setRaceConfirmed(true);
+      if (res.timedOut) toast("The sandbox run timed out");
+    } catch {
+      toast("The IDE runner isn't running. Start it with `pnpm dev` (or `pnpm ide`) and Docker Desktop.");
+    } finally {
+      setSandboxBusy(false);
+    }
+  };
 
   const complete = () => {
     act((d, c) => {
@@ -148,7 +174,13 @@ export function TaskPanel({ task, quest }: { task: Task; quest?: Quest }) {
       {evidenceNeeded && (
         <div className="gate">
           <h4>Evidence</h4>
-          <p className="small" style={{ margin: 0 }}>Paste your <code>go test</code> output. Plain text or <code>-json</code> both work. The app checks it on your device.</p>
+          <p className="small" style={{ margin: 0 }}>Paste your <code>go test</code> output (plain text or <code>-json</code>), or run it in the sandbox on your <code>jobq</code> workspace. The app checks it on your device.</p>
+          <div className="row">
+            <button type="button" className="btn sm" disabled={sandboxBusy} onClick={() => void runSandboxEvidence()}>
+              {sandboxBusy ? "Running in sandbox…" : `Run in sandbox: go test${sandboxFlags.race ? " -race" : ""}${sandboxFlags.cover ? " -cover" : ""}${sandboxFlags.bench ? " -bench ." : ""} ./...`}
+            </button>
+            <a className="small" href="/ide/">Open the IDE</a>
+          </div>
           <textarea className="mono" id={`evidence-${task.id}`} aria-label="go test output" value={output} onChange={(e) => setOutput(e.target.value)} placeholder={"ok  \tgithub.com/you/jobq/internal/store\t0.41s\tcoverage: 78.2% of statements"} />
           {criteria.some((c) => c.kind === "go-test-race") && (
             <label className="check"><input type="checkbox" checked={raceConfirmed} onChange={(e) => setRaceConfirmed(e.target.checked)} /> This output is from a run with <code>-race</code></label>

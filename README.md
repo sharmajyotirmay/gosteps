@@ -6,6 +6,7 @@ A leveling-style daily quest system for learning Go. You build **jobq**, a concu
 - **Evidence-based.** Spaced repetition (FSRS), active recall, Pomodoro, interleaving, Feynman explanations, and reflection. Each method changes the actual flow. See [docs/DESIGN.md](docs/DESIGN.md) for the research and formulas.
 - **Humane penalties.** Grace days, Rest Tokens, Stasis (vacation mode), XP held in escrow rather than deleted, and Gentle, Standard, or Hardcore severity.
 - **DSA track: 1000 problems in 100 days.** Ten phases of patterns (35 topics, 266 verified anchor problems), solved in Go, on the same level, rank, stats, streak, and Daily Orders as the Go quests.
+- **Built-in Go IDE.** Edit your `jobq` and DSA code in the app and run it in a locked-down Docker sandbox. One click fills quest evidence with real `go test -race` output.
 - **Curriculum as data.** Courses are markdown folders compiled to JSON. See [curriculum/README.md](curriculum/README.md).
 
 All names, ranks, and visuals are original. The app isn't affiliated with any manhwa, webtoon, or game.
@@ -38,6 +39,12 @@ All names, ranks, and visuals are original. The app isn't affiliated with any ma
   <tr>
     <td><b>Profile.</b> Rank ladder (each rank needs a level and a cleared Gate Trial), stats, and achievements that stay hidden until you unlock them.</td>
     <td><b>System → Commands.</b> Quick actions, plus the exact <code>go</code> commands for the stage you're on, ready to copy.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/ide.png" alt="The in-app IDE: file tree, a Go file in the editor, and go test -race -cover output from the Docker sandbox"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>IDE.</b> Edit Go in the browser, then Run, Test, Test -race, Vet, Format, or Tidy. Each run happens in a throwaway Docker container with no network, a read-only system, and access to only that one module.</td>
   </tr>
   <tr>
     <td colspan="2"><img src="docs/screenshots/dsa.png" alt="DSA page: 129 of 1000 solved on day 15, 21 behind pace, a 100-day heatmap, today's topic Monotonic stack, and the log form"></td>
@@ -75,7 +82,7 @@ pnpm preview             # serves out/ on http://localhost:3000, plus the local 
 | Mirror on disk | `.gosteps-data/state.json` in this repo | Whenever the local store is running. `pnpm dev` and `pnpm preview` start it automatically. |
 | Daily backups | `.gosteps-data/backups/state-YYYY-MM-DD.json`, last 30 kept | Same as above |
 
-**`.gosteps-data/` is git-ignored, so your progress is never committed.** Exported `gosteps-backup-*.json` files are ignored too, in case you save one inside the repo.
+**`.gosteps-data/` (progress) and `.gosteps-workspace/` (your IDE code) are git-ignored, so neither is ever committed.** Exported `gosteps-backup-*.json` files are ignored too, in case you save one inside the repo.
 
 How the mirror behaves:
 - **Saving.** Every change is written to the file about 1.5 s later (straight away when you leave the tab). Writes go to a temp file first, then get renamed, so a crash can't leave half a file.
@@ -139,9 +146,11 @@ Then use **Settings → Storage → Load from disk**. Any backup can also be loa
 
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Dev server with hot reload, plus the local file store (saves to `.gosteps-data/`) |
+| `pnpm dev` | Dev server with hot reload, the local file store (`.gosteps-data/`), and the IDE runner (`.gosteps-workspace/`) |
 | `pnpm dev:app` | Dev server only, with no file mirror |
 | `pnpm store` | Just the local file store, for example next to `pnpm preview` or a deployed copy you open from localhost |
+| `pnpm ide` | Just the IDE runner |
+| `pnpm ide:setup` | One-time: pull the Go image and create the sandbox caches |
 | `pnpm course:build` | Compile `curriculum/go/*.md` and `curriculum/dsa/*.md` to JSON and readable roadmaps |
 | `pnpm test` | Unit tests (engine rules, evidence parser, storage, course validation) |
 | `pnpm e2e` | Playwright end-to-end tests against the static build (run `pnpm build` first) |
@@ -191,6 +200,65 @@ mkdir -p t01-hashing/two_sum && cd t01-hashing/two_sum
 go test ./...
 ```
 
+## The IDE (Docker sandbox)
+
+Write, edit, and run your Go code inside GoSteps. Open **IDE** in the nav.
+
+### Set it up
+
+1. **Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/).**
+2. **Start everything:**
+   ```sh
+   pnpm dev            # app + file store + IDE runner
+   ```
+3. **One-time sandbox setup.** This downloads the Go image (`golang:1.26-bookworm`) and creates the build caches. Either click **Set up sandbox** on the IDE page, or run:
+   ```sh
+   pnpm ide:setup
+   ```
+4. **Open the IDE** (http://localhost:3000/ide). You get two modules, created for you in `.gosteps-workspace/`:
+   - `jobq`: your Go course project.
+   - `dsa-go`: one package per DSA problem.
+
+### Use it
+
+- **Editing:** **New file** creates a file such as `internal/job/job.go`. `⌘/Ctrl+S` saves, and `⌘/Ctrl+Enter` runs the tests.
+- **Buttons:**
+  - **Run:** `go run` on the active file's package.
+  - **Test** and **Test -race**, with optional `-cover` and `-v`.
+  - **Vet** and **Format** (`gofmt -w`).
+  - **Tidy deps:** `go mod tidy`, which downloads modules such as `goleak` and `errgroup`.
+  - **Stop:** kills a run.
+- **Quest evidence:** every quest stage that needs evidence has **Run in sandbox**. It runs `go test` on your `jobq` workspace with exactly the flags the criteria need (`-race`, `-cover`, `-bench`) and fills in the output for you. Because the app ran `-race` itself, it doesn't ask you to confirm it.
+- **DSA:** **Open in IDE** on the DSA page creates `dsa-go/<topic>/<problem>/solution.go` plus a table-driven `solution_test.go`, and opens it.
+
+### Where your code lives
+
+`.gosteps-workspace/` at the repo root is **git-ignored**, so it's yours only. To keep it elsewhere, for example to work in your own `jobq` git repo:
+
+```sh
+GOSTEPS_WORKSPACE=~/Dev/gosteps-workspace pnpm dev   # each subfolder with a go.mod shows up as a module
+```
+
+### How it's kept safe
+
+Your code never runs in the website or in Node. It runs only in a throwaway container:
+
+| Layer | What it stops |
+|---|---|
+| Only the one module folder is mounted (at `/src`) | Code can't see or change the website's source, `.gosteps-data/`, other modules, or anything else on your disk. |
+| `--network none` for run, test, vet, fmt, and build | No internet, and no access to the app, the file store, or the IDE runner on your machine. Only **Tidy deps** gets network, and it never runs your code. |
+| `--read-only` root filesystem, size-capped `/tmp` | Can't modify the container's system or fill your disk. |
+| `--cap-drop ALL`, `no-new-privileges`, runs as your user (not root) | No privilege escalation inside the container. |
+| `--memory 1g`, `--cpus 2`, `--pids-limit 256`, timeouts (60 s run / 180 s test) | Infinite loops, fork bombs, and memory hogs get killed. |
+| `--rm` plus orphan cleanup when the runner starts | Nothing is left running. |
+
+The runner itself (`scripts/ide-server.ts`):
+- **Network:** listens on `127.0.0.1:4778` only. It answers only localhost pages, checks the `Host` header (which blocks DNS rebinding), and requires an `x-gosteps` header (which other websites can't send).
+- **Commands:** no shell, ever. Commands come from an allowlist (`go run`, `test`, `vet`, `build`, `mod tidy`, and `gofmt`), and every flag and package pattern is validated.
+- **Files:** paths are confined to the workspace. `..`, absolute paths, hidden files, and symlinks are all rejected. Only source and text files can be written, up to 1 MB each.
+
+All of this is covered by tests, including real Docker runs that try to reach the network, write to `/etc`, read other modules, and fork-bomb. See `scripts/ide/*.test.ts`.
+
 ## Using the System
 
 - Click the floating hexagon (bottom-right), or press **Ctrl/⌘ K** or **`**. **Esc** closes it.
@@ -234,6 +302,7 @@ The build is a static site. To host it on GitHub Pages under `/<repo>`, build wi
 | M4: evidence parser, Gate Trials, achievements and titles | ✅ (GitHub links are recorded but not fetched yet) |
 | M5: remote adapters | Export/import ✅. Supabase, PocketBase, and Postgres: planned |
 | DSA track: 1000 problems / 100 days, linked to the same player | ✅ |
+| In-app Go IDE with a Docker sandbox | ✅ |
 | M6: polish, accessibility audit, screenshots | Screenshots ✅. Accessibility audit in progress |
 
 ## License

@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { guardLocal } from "./ide/local-http";
 
 // Local file store: mirrors the app's state to a JSON file on this computer.
 // Binds to 127.0.0.1 only and accepts requests only from localhost pages.
@@ -14,7 +15,6 @@ import { join, resolve } from "node:path";
 export const DEFAULT_PORT = 4777;
 const MAX_BODY = 50 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
-const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 
 export function dataDir() {
   return resolve(process.env.GOSTEPS_DATA_DIR ?? join(import.meta.dirname, "..", ".gosteps-data"));
@@ -52,16 +52,7 @@ export function createStoreServer(dir = dataDir()): Server {
   let writing: Promise<unknown> = Promise.resolve();
 
   return createServer(async (req, res) => {
-    const origin = req.headers.origin;
-    if (origin) {
-      if (!LOCAL_ORIGIN.test(origin)) return send(res, 403, { error: "only localhost pages may use the local store" });
-      res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Vary", "Origin");
-      res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      res.setHeader("Access-Control-Allow-Private-Network", "true");
-    }
-    if (req.method === "OPTIONS") return res.writeHead(204).end();
+    if (guardLocal(req, res, { methods: "GET, PUT, OPTIONS" })) return;
 
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     try {

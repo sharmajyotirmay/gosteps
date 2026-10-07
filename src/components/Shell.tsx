@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/", label: "Status" },
   { href: "/quests", label: "Quests" },
   { href: "/dsa", label: "DSA" },
+  { href: "/ide", label: "IDE" },
   { href: "/review", label: "Review" },
   { href: "/journal", label: "Journal" },
   { href: "/profile", label: "Profile" },

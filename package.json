@@ -5,10 +5,10 @@
   "scripts": {
     "course:build": "tsx scripts/build-course.ts && tsx scripts/build-dsa.ts",
     "predev": "pnpm course:build",
-    "dev": "concurrently -k -n app,store -c blue,magenta \"next dev\" \"tsx scripts/local-store.ts\"",
+    "dev": "concurrently -k -n app,store,ide -c blue,magenta,green \"next dev\" \"tsx scripts/local-store.ts\" \"tsx scripts/ide-server.ts\"",
     "prebuild": "pnpm course:build",
     "build": "next build",
-    "preview": "concurrently -k -n app,store -c blue,magenta \"pnpm dlx serve@14 out\" \"tsx scripts/local-store.ts\"",
+    "preview": "concurrently -k -n app,store,ide -c blue,magenta,green \"pnpm dlx serve@14 out\" \"tsx scripts/local-store.ts\" \"tsx scripts/ide-server.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -18,9 +18,18 @@
     "e2e": "playwright test",
     "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts",
     "dev:app": "next dev",
-    "store": "tsx scripts/local-store.ts"
+    "store": "tsx scripts/local-store.ts",
+    "ide": "tsx scripts/ide-server.ts",
+    "ide:setup": "tsx scripts/ide-server.ts --setup"
   },
   "dependencies": {
+    "@codemirror/lang-go": "^6.0.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@lezer/highlight": "^1.2.5",
+    "codemirror": "^6.0.2",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
     "immer": "^11.1.18",

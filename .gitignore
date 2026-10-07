@@ -48,3 +48,6 @@ next-env.d.ts
 # GoSteps local data: your personal progress, mirrored to disk by `pnpm store` (never commit)
 /.gosteps-data/
 gosteps-backup-*.json
+
+# GoSteps IDE workspace: your Go code (jobq, dsa-go), edited in the in-app IDE (never commit)
+/.gosteps-workspace/

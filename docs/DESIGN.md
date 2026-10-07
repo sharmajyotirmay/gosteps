@@ -308,6 +308,21 @@ A tiny Node server (`scripts/local-store.ts`, no dependencies) runs with `pnpm d
 | Security | Binds to 127.0.0.1. Rejects requests whose `Origin` isn't a localhost page (403). Body limit 50 MB. |
 | Privacy | `.gosteps-data/` is git-ignored. Tests use a throwaway store on another port with a temp folder, so they never touch real data. |
 
+### 5.2 IDE and Docker sandbox (added)
+
+The goal is to write and run Go inside GoSteps **without letting that code touch the website, your data, or the rest of your machine**.
+
+| Part | Design |
+|---|---|
+| Editor | CodeMirror 6, bundled locally (no CDN), Go and Markdown modes, themed from the app's tokens. |
+| Runner | `scripts/ide-server.ts`: a dependency-free Node server on `127.0.0.1:4778`. It does file CRUD in the workspace, plus `/run`, which streams NDJSON output. |
+| Workspace | `.gosteps-workspace/` (git-ignored), or `GOSTEPS_WORKSPACE`. Modules are its subfolders that contain a `go.mod`. Defaults: `jobq`, `dsa-go`. Excluded from tsconfig, ESLint, and Vitest, so it can never become part of the site's build. |
+| Execution | `docker run` built as an argv array (no shell) from an allowlist of actions. One container per run, removed on exit. |
+| Isolation | Mount only the module. `--network none` (except `go mod tidy`, which downloads modules and doesn't execute user code). `--read-only` with a capped `/tmp` tmpfs. `--cap-drop ALL` and `no-new-privileges`. Your uid, not root. Memory, CPU, and pids limits. Per-action timeouts. Output capped at 2 MB. At most 2 concurrent runs. Killed when the browser disconnects. |
+| Caches | Named volumes for `GOCACHE` (rw) and `GOMODCACHE` (read-only, except during `tidy`), so runs are fast without giving code a writable module cache. |
+| Access control | Host header must be localhost (DNS rebinding). Origin must be a localhost page. The `x-gosteps` header is required, which forces a CORS preflight that other origins fail. Paths are validated per segment, with symlinks and hidden files rejected. |
+| Links into the game | Quest evidence gets **Run in sandbox**, which picks flags from the stage's criteria and auto-confirms `-race`. DSA gets **Open in IDE**, which scaffolds a package and test file. |
+
 ## 6. Screens and flows
 
 | Screen | Purpose / key elements |

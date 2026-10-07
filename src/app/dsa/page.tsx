@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { scaffold } from "@/ide/client";
 import { useGame } from "@/components/GameProvider";
 import { InlineCode, Markdown, Panel } from "@/components/ui";
 import { dailyCounts, logProblem, pace, patternKey, gateKey, planDayKey, problemXP, redoQueue, startDsa, studyPattern, submitGate, topicForDay, uniqueSolved } from "@/engine/dsa";
@@ -301,12 +303,25 @@ function GoScaffold({ slug, topicId }: { slug: string; topicId: string }) {
     `go test ./...`,
   ].join("\n");
   const copy = () => navigator.clipboard?.writeText(cmd).then(() => toast("Copied"), () => toast("Copy failed: select the text instead"));
+  const router = useRouter();
+  const openInIde = async () => {
+    try {
+      const anchor = dsa.anchorBySlug.get(slug);
+      const path = await scaffold({ module: "dsa-go", dir: dir, pkg: pkg(slug), title: anchor?.problem.title ?? slug, url: problemUrl(slug) });
+      router.push(`/ide?open=${encodeURIComponent(path)}`);
+    } catch {
+      toast("The IDE runner isn't running. Start it with `pnpm dev` (or `pnpm ide`).");
+    }
+  };
   return (
     <Panel title="Solve it in Go">
       <div className="stack">
         <p className="small" style={{ margin: 0 }}>One package per problem, with a table-driven test. This is your Go practice too.</p>
         <pre className="md" style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", background: "var(--code-bg)", border: "1px solid var(--panel-edge)", padding: "10px 12px", font: "12px/1.5 var(--mono)" }}>{cmd}</pre>
-        <div><button type="button" className="btn sm ghost" onClick={copy}>Copy commands</button></div>
+        <div className="row">
+          <button type="button" className="btn sm" onClick={() => void openInIde()}>Open in IDE</button>
+          <button type="button" className="btn sm ghost" onClick={copy}>Copy commands</button>
+        </div>
       </div>
     </Panel>
   );
